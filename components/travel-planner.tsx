@@ -31,9 +31,16 @@ const styles = [
 ]
 
 const itineraryDays = [
-  { day: 'Day 1', title: 'Arrival & first impressions', stops: ['Check in to your hotel', 'Sunset viewpoint walk', 'Local trattoria dinner'], booking: 'https://www.booking.com/', activity: 'https://www.getyourguide.com/' },
-  { day: 'Day 2', title: 'The essential sights', stops: ['Guided city highlights tour', 'Lunch at a neighborhood market', 'Evening food experience'], booking: 'https://www.getyourguide.com/', activity: 'https://www.viator.com/' },
-  { day: 'Day 3', title: 'A day beyond the city', stops: ['Scenic day trip', 'Small-group excursion', 'Return transfer'], booking: 'https://www.getyourguide.com/', activity: 'https://www.viator.com/' },
+  { title: 'Arrival & first impressions', stops: ['Check in to your hotel', 'Sunset viewpoint walk', 'Local trattoria dinner'] },
+  { title: 'The essential sights', stops: ['Guided city highlights tour', 'Lunch at a neighborhood market', 'Evening food experience'] },
+  { title: 'A day beyond the city', stops: ['Scenic day trip', 'Small-group excursion', 'Return transfer'] },
+  { title: 'Local life & hidden corners', stops: ['Neighborhood coffee walk', 'Independent shops and makers', 'Golden-hour aperitivo'] },
+  { title: 'Culture, coast & cuisine', stops: ['Museum or landmark visit', 'Market-to-table lunch', 'Dinner with a local view'] },
+  { title: 'The slow travel day', stops: ['A relaxed morning in the old town', 'Regional tasting experience', 'Sunset by the water'] },
+  { title: 'Final favourites', stops: ['Revisit your favourite place', 'Last-minute local discoveries', 'Farewell dinner'] },
+  { title: 'A little further out', stops: ['Countryside or island escape', 'Small-group day excursion', 'Return to your stay'] },
+  { title: 'The food trail', stops: ['Local bakery breakfast', 'Chef-led food experience', 'Night market stroll'] },
+  { title: 'Goodbye, for now', stops: ['Pack and check out', 'One final viewpoint', 'Airport or station transfer'] },
 ]
 
 export function TravelPlanner() {
@@ -109,8 +116,8 @@ export function TravelPlanner() {
       </section>
 
       {submitted && <section className="itinerary-section" id="itinerary" aria-live="polite">
-        <div className="itinerary-heading"><div><p className="eyebrow warm">Your personal route</p><h2>{destination}, thoughtfully planned.</h2><p>{duration} with {selectedStyles.length ? selectedStyles.join(', ').toLowerCase() : 'a balanced mix of'} experiences, stays, and local moments.</p></div><button className="outline-button" onClick={() => window.print()}><CalendarDays size={16} /> Save itinerary</button></div>
-        <div className="itinerary-days">{itineraryDays.map((item) => <article className="day-card" key={item.day}><div className="day-label">{item.day}</div><h3>{item.title}</h3><ul>{item.stops.map((stop) => <li key={stop}>{stop}</li>)}</ul><div className="booking-links"><a href={item.booking} target="_blank" rel="noreferrer">Book stays <ArrowRight size={14} /></a><a href={item.activity} target="_blank" rel="noreferrer">Book excursions <ArrowRight size={14} /></a></div></article>)}</div>
+        <div className="itinerary-heading"><div><p className="eyebrow warm">Your personal route</p><h2>{destination}, thoughtfully planned.</h2><p>{duration} with {selectedStyles.length ? selectedStyles.join(', ').toLowerCase() : 'a balanced mix of'} experiences, stays, and local moments.</p></div><div className="itinerary-actions"><img src="/travel-hero.png" alt={`${destination} travel illustration`} /><button className="outline-button" onClick={() => window.print()}><CalendarDays size={16} /> Save itinerary</button></div></div>
+        <div className="itinerary-days">{itineraryDays.slice(0, Number.parseInt(duration, 10)).map((item, index) => <article className="day-card" key={`${item.title}-${index}`}><div className="day-label">Day {index + 1}</div><h3>{item.title}</h3><ul>{item.stops.map((stop) => <li key={stop}>{stop}</li>)}</ul><div className="booking-links"><a href={`https://www.booking.com/searchresults.html?ss=${encodeURIComponent(destination)}`} target="_blank" rel="noreferrer">Book stays <ArrowRight size={14} /></a><a href={`https://www.getyourguide.com/s/?q=${encodeURIComponent(destination)}`} target="_blank" rel="noreferrer">Book excursions <ArrowRight size={14} /></a></div></article>)}</div>
         <div className="route-note"><Sparkles size={17} /><span><strong>Smart routing</strong> Groups nearby places together to reduce transit time.</span></div>
       </section>}
 

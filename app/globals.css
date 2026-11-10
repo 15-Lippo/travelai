@@ -50,7 +50,7 @@ input::placeholder { color: #a5a9ad; }
 .story-section { width: min(1060px, calc(100% - 48px)); margin: 130px auto; display: grid; grid-template-columns: 1fr 1fr; align-items: end; gap: 80px; }
 .story-section h2 { font: 500 clamp(38px, 5vw, 60px)/1.05 'Playfair Display', serif; letter-spacing: -.04em; margin: 0; } .story-section > p { font-size: 17px; line-height: 1.7; color: var(--muted); max-width: 400px; margin: 0 0 4px; } .eyebrow.warm { color: var(--accent); }
 .itinerary-section { max-width: 1080px; margin: 0 auto; padding: 72px 24px 88px; }
-.itinerary-heading { display: flex; justify-content: space-between; align-items: end; gap: 24px; margin-bottom: 32px; }
+.itinerary-heading { display: flex; justify-content: space-between; align-items: end; gap: 24px; margin-bottom: 32px; } .itinerary-actions { display: flex; align-items: center; gap: 14px; } .itinerary-actions img { width: 116px; height: 72px; object-fit: cover; border-radius: 16px; box-shadow: 0 10px 24px rgba(22,55,47,.12); }
 .itinerary-heading h2 { font-family: 'Playfair Display', serif; font-size: clamp(34px, 4vw, 58px); font-weight: 400; margin: 8px 0 12px; }
 .itinerary-heading p:not(.eyebrow) { color: var(--muted); max-width: 560px; }
 .outline-button { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: transparent; border-radius: 999px; padding: 12px 16px; color: var(--ink); font-weight: 600; white-space: nowrap; }
