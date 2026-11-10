@@ -35,17 +35,24 @@ export function TravelPlanner() {
   const [selectedStyles, setSelectedStyles] = useState<string[]>([])
   const [menuOpen, setMenuOpen] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [darkMode, setDarkMode] = useState(false)
+  const [signInOpen, setSignInOpen] = useState(false)
+  const [savedTrips, setSavedTrips] = useState<string[]>([])
 
   const toggleStyle = (name: string) => {
     setSelectedStyles((current) => current.includes(name) ? current.filter((item) => item !== name) : [...current, name])
   }
 
   const submit = () => {
-    if (destination.trim()) setSubmitted(true)
+    if (destination.trim()) {
+      setSubmitted(true)
+      setSavedTrips((current) => current.includes(destination.trim()) ? current : [...current, destination.trim()])
+      window.setTimeout(() => document.getElementById('saved')?.scrollIntoView({ behavior: 'smooth' }), 50)
+    }
   }
 
   return (
-    <main className="travel-app">
+    <main className={darkMode ? 'travel-app dark-mode' : 'travel-app'}>
       <header className="site-header">
         <a className="brand" href="#top" aria-label="travel AI home">
           <span className="brand-mark"><Plane size={16} strokeWidth={2.5} /></span>
@@ -55,8 +62,8 @@ export function TravelPlanner() {
           <a href="#how">How it works</a>
           <a href="#about">About</a>
           <a href="#saved">My trips</a>
-          <button className="theme-button" aria-label="Toggle theme"><Moon size={17} /></button>
-          <button className="sign-in"><LogIn size={16} /> Sign in</button>
+          <button className="theme-button" aria-label="Toggle theme" aria-pressed={darkMode} onClick={() => setDarkMode((current) => !current)}><Moon size={17} /></button>
+          <button className="sign-in" onClick={() => setSignInOpen(true)}><LogIn size={16} /> Sign in</button>
         </nav>
         <button className="menu-button" onClick={() => setMenuOpen(!menuOpen)} aria-label={menuOpen ? 'Close menu' : 'Open menu'}>
           {menuOpen ? <X size={22} /> : <Menu size={22} />}
@@ -99,7 +106,9 @@ export function TravelPlanner() {
       </section>
 
       <section className="story-section" id="about"><div><p className="eyebrow warm">Made for curious travelers</p><h2>More than a plan.<br /><em>A feeling to follow.</em></h2></div><p>We turn the overwhelming parts of travel into a thoughtful route you will actually want to take. Less research, more wonder.</p></section>
-      <footer id="saved"><div className="footer-brand"><span className="brand-mark"><Plane size={16} /></span><span>travel AI</span></div><p>Thoughtful trips, beautifully planned.</p><span>© 2026 travel AI</span></footer>
+      <section className="saved-section" id="saved" aria-live="polite"><div><p className="eyebrow warm">Your saved trips</p><h2>Keep the <em>wonder</em> close.</h2></div>{savedTrips.length === 0 ? <p className="empty-trips">Generate an itinerary and it will appear here.</p> : <div className="trip-list">{savedTrips.map((trip) => <button key={trip} className="trip-card" onClick={() => { setDestination(trip); setSubmitted(false); document.getElementById('top')?.scrollIntoView({ behavior: 'smooth' }) }}><MapPin size={16} /><span>{trip}</span><ArrowRight size={16} /></button>)}</div>}</section>
+      <footer><div className="footer-brand"><span className="brand-mark"><Plane size={16} /></span><span>travel AI</span></div><p>Thoughtful trips, beautifully planned.</p><span>© 2026 travel AI</span></footer>
+      {signInOpen && <div className="modal-backdrop" role="presentation" onClick={() => setSignInOpen(false)}><section className="sign-in-modal" role="dialog" aria-modal="true" aria-labelledby="sign-in-title" onClick={(event) => event.stopPropagation()}><button className="modal-close" onClick={() => setSignInOpen(false)} aria-label="Close sign in"><X size={18} /></button><p className="eyebrow">Welcome back</p><h2 id="sign-in-title">Sign in to travel AI</h2><p>Save your itineraries and pick up planning wherever you left off.</p><input aria-label="Email address" type="email" placeholder="you@example.com" /><button className="generate-button" onClick={() => setSignInOpen(false)}>Continue <ArrowRight size={18} /></button></section></div>}
     </main>
   )
 }
