@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import {
   ArrowRight,
+  CalendarDays,
   Compass,
   Gem,
   Globe2,
@@ -29,6 +30,12 @@ const styles = [
   { name: 'Relaxation', detail: 'Slow & restful', icon: HeartHandshake },
 ]
 
+const itineraryDays = [
+  { day: 'Day 1', title: 'Arrival & first impressions', stops: ['Check in to your hotel', 'Sunset viewpoint walk', 'Local trattoria dinner'], booking: 'https://www.booking.com/', activity: 'https://www.getyourguide.com/' },
+  { day: 'Day 2', title: 'The essential sights', stops: ['Guided city highlights tour', 'Lunch at a neighborhood market', 'Evening food experience'], booking: 'https://www.getyourguide.com/', activity: 'https://www.viator.com/' },
+  { day: 'Day 3', title: 'A day beyond the city', stops: ['Scenic day trip', 'Small-group excursion', 'Return transfer'], booking: 'https://www.getyourguide.com/', activity: 'https://www.viator.com/' },
+]
+
 export function TravelPlanner() {
   const [destination, setDestination] = useState('')
   const [duration, setDuration] = useState('5 days')
@@ -47,7 +54,7 @@ export function TravelPlanner() {
     if (destination.trim()) {
       setSubmitted(true)
       setSavedTrips((current) => current.includes(destination.trim()) ? current : [...current, destination.trim()])
-      window.setTimeout(() => document.getElementById('saved')?.scrollIntoView({ behavior: 'smooth' }), 50)
+      window.setTimeout(() => document.getElementById('itinerary')?.scrollIntoView({ behavior: 'smooth' }), 50)
     }
   }
 
@@ -100,6 +107,12 @@ export function TravelPlanner() {
           </section>
         </div>
       </section>
+
+      {submitted && <section className="itinerary-section" id="itinerary" aria-live="polite">
+        <div className="itinerary-heading"><div><p className="eyebrow warm">Your personal route</p><h2>{destination}, thoughtfully planned.</h2><p>{duration} with {selectedStyles.length ? selectedStyles.join(', ').toLowerCase() : 'a balanced mix of'} experiences, stays, and local moments.</p></div><button className="outline-button" onClick={() => window.print()}><CalendarDays size={16} /> Save itinerary</button></div>
+        <div className="itinerary-days">{itineraryDays.map((item) => <article className="day-card" key={item.day}><div className="day-label">{item.day}</div><h3>{item.title}</h3><ul>{item.stops.map((stop) => <li key={stop}>{stop}</li>)}</ul><div className="booking-links"><a href={item.booking} target="_blank" rel="noreferrer">Book stays <ArrowRight size={14} /></a><a href={item.activity} target="_blank" rel="noreferrer">Book excursions <ArrowRight size={14} /></a></div></article>)}</div>
+        <div className="route-note"><Sparkles size={17} /><span><strong>Smart routing</strong> Groups nearby places together to reduce transit time.</span></div>
+      </section>}
 
       <section className="benefits" id="how">
         {[['Morning to night', 'Every day split into morning, afternoon, and evening blocks.', Lightbulb], ['Insider tips', 'One local secret per day that guidebooks miss.', Globe2], ['Smart routing', 'Nearby sights grouped together, so less time in transit.', Compass]].map(([title, text, Icon]) => <article className="benefit-card" key={title as string}><Icon size={21} /><h2>{title as string}</h2><p>{text as string}</p></article>)}
