@@ -43,6 +43,10 @@ const itineraryDays = [
   { title: 'Goodbye, for now', stops: ['Pack and check out', 'One final viewpoint', 'Airport or station transfer'] },
 ]
 
+const bookingLink = (destination: string) => `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(destination)}`
+const activityLink = (destination: string) => `https://www.getyourguide.com/s/?q=${encodeURIComponent(destination)}`
+const mapLink = (destination: string, stop: string) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${stop}, ${destination}`)}`
+
 export function TravelPlanner() {
   const [destination, setDestination] = useState('')
   const [duration, setDuration] = useState('5 days')
@@ -117,7 +121,7 @@ export function TravelPlanner() {
 
       {submitted && <section className="itinerary-section" id="itinerary" aria-live="polite">
         <div className="itinerary-heading"><div><p className="eyebrow warm">Your personal route</p><h2>{destination}, thoughtfully planned.</h2><p>{duration} with {selectedStyles.length ? selectedStyles.join(', ').toLowerCase() : 'a balanced mix of'} experiences, stays, and local moments.</p></div><div className="itinerary-actions"><img src="/travel-hero.png" alt={`${destination} travel illustration`} /><button className="outline-button" onClick={() => window.print()}><CalendarDays size={16} /> Save itinerary</button></div></div>
-        <div className="itinerary-days">{itineraryDays.slice(0, Number.parseInt(duration, 10)).map((item, index) => <article className="day-card" key={`${item.title}-${index}`}><div className="day-label">Day {index + 1}</div><h3>{item.title}</h3><ul>{item.stops.map((stop) => <li key={stop}>{stop}</li>)}</ul><div className="booking-links"><a href={`https://www.booking.com/searchresults.html?ss=${encodeURIComponent(destination)}`} target="_blank" rel="noreferrer">Book stays <ArrowRight size={14} /></a><a href={`https://www.getyourguide.com/s/?q=${encodeURIComponent(destination)}`} target="_blank" rel="noreferrer">Book excursions <ArrowRight size={14} /></a></div></article>)}</div>
+        <div className="itinerary-days">{itineraryDays.slice(0, Number.parseInt(duration, 10)).map((item, index) => <article className="day-card" key={`${item.title}-${index}`}><div className="day-label">Day {index + 1}</div><h3>{item.title}</h3><ul>{item.stops.map((stop) => <li key={stop}><a href={mapLink(destination, stop)} target="_blank" rel="noreferrer"><MapPin size={14} />{stop}<ArrowRight size={13} /></a></li>)}</ul><div className="booking-links"><a href={bookingLink(destination)} target="_blank" rel="noreferrer">Book stays <ArrowRight size={14} /></a><a href={activityLink(destination)} target="_blank" rel="noreferrer">Book excursions <ArrowRight size={14} /></a><a href={`https://www.google.com/travel/flights?q=flights%20to%20${encodeURIComponent(destination)}`} target="_blank" rel="noreferrer">Find flights <ArrowRight size={14} /></a></div></article>)}</div>
         <div className="route-note"><Sparkles size={17} /><span><strong>Smart routing</strong> Groups nearby places together to reduce transit time.</span></div>
       </section>}
 
