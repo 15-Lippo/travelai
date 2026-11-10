@@ -1,42 +1,23 @@
 
-.day-guide-button { display: flex; width: 100%; align-items: center; justify-content: center; gap: 8px; margin-top: 12px; padding: 11px 14px; border: 0; border-radius: 10px; background: var(--ink); color: #fff; font-size: 13px; font-weight: 700; transition: background .2s, transform .2s; }
-.day-guide-button:hover { background: #304558; transform: translateY(-1px); }
-.day-guide-button svg:last-child { margin-left: auto; }
-.itinerary-footer-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
-.itinerary-footer-links a { border: 1px solid var(--line); border-radius: 999px; padding: 10px 14px; color: var(--ink); text-decoration: none; font-size: 12px; font-weight: 700; }
-.itinerary-footer-links a:hover { border-color: var(--accent); color: var(--accent); }
-.guide-backdrop { position: fixed; z-index: 20; inset: 0; display: grid; place-items: center; padding: 20px; background: rgba(13, 23, 31, .62); backdrop-filter: blur(4px); }
-.guide-dialog { position: relative; width: min(760px, 100%); max-height: min(88vh, 900px); overflow-y: auto; padding: clamp(24px, 5vw, 42px); border-radius: 22px; background: #fffdf9; color: var(--ink); box-shadow: 0 24px 80px rgba(0,0,0,.28); }
-.guide-close { position: absolute; top: 18px; right: 18px; width: 38px; height: 38px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 50%; background: transparent; color: var(--ink); }
-.guide-dialog > .eyebrow { margin-right: 44px; }
-.guide-dialog h2 { margin: 0; font: 500 clamp(32px, 5vw, 46px)/1.08 'Playfair Display', serif; letter-spacing: -.03em; }
-.guide-destination { display: flex; align-items: center; gap: 6px; margin: 12px 0 24px; color: var(--muted); font-size: 14px; }
-.guide-loading { min-height: 230px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; color: var(--muted); }
-.guide-loading strong { color: var(--ink); }
-.guide-loading span { max-width: 360px; font-size: 13px; line-height: 1.6; }
-.guide-spinner { color: var(--accent); animation: guide-spin 1s linear infinite; }
-@keyframes guide-spin { to { transform: rotate(360deg); } }
-.guide-error { padding: 18px; border-radius: 12px; background: #fff1ed; color: #8d3926; }
-.guide-error .outline-button { cursor: pointer; }
-.guide-intro { margin: 0 0 28px; color: #4e5963; font-size: 16px; line-height: 1.75; }
-.guide-content h3 { display: flex; align-items: center; gap: 8px; margin: 26px 0 14px; font: 500 21px 'Playfair Display', serif; }
-.guide-content h3 svg { color: var(--accent); }
-.guide-schedule { display: grid; gap: 0; border-left: 1px solid var(--line); margin-left: 6px; }
-.guide-schedule article { position: relative; display: grid; grid-template-columns: 90px 1fr; gap: 16px; padding: 0 0 22px 18px; }
-.guide-schedule article::before { position: absolute; top: 4px; left: -5px; width: 9px; height: 9px; border-radius: 50%; background: var(--accent); content: ''; }
-.guide-schedule article > span { color: var(--accent); font-size: 12px; font-weight: 700; }
-.guide-schedule strong { font-size: 14px; }
-.guide-schedule p, .guide-info-grid p { margin: 6px 0 0; color: var(--muted); font-size: 13px; line-height: 1.65; }
-.guide-tips { display: grid; gap: 10px; padding-left: 20px; color: #59636c; font-size: 14px; line-height: 1.6; }
-.guide-tips li::marker { color: var(--accent); }
-.guide-info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 22px; }
-.guide-info-grid article { padding: 16px; border: 1px solid var(--line); border-radius: 13px; background: #faf7f1; }
-.guide-info-grid h3 { margin: 0; font: 600 13px 'DM Sans', sans-serif; }
-.guide-info-grid p { font-size: 12px; }
-.guide-disclaimer { margin: 22px 0 0; color: #848a8f; font-size: 11px; line-height: 1.5; }
-@media (max-width: 600px) {
-  .guide-backdrop { padding: 10px; }
-  .guide-dialog { max-height: 94vh; padding: 24px 18px; border-radius: 17px; }
-  .guide-info-grid { grid-template-columns: 1fr; }
-  .guide-schedule article { grid-template-columns: 68px 1fr; gap: 10px; }
+/* Editorial polish for the AI-composed day guide */
+.guide-dialog {
+  border: 1px solid rgba(255,255,255,.72);
+  background: linear-gradient(155deg, #fffefa 0%, #fffdf9 60%, #f8f2e8 100%);
+  box-shadow: 0 30px 100px rgba(0,0,0,.32);
+  animation: guide-arrive .32s cubic-bezier(.2,.8,.2,1) both;
 }
+@keyframes guide-arrive { from { opacity: 0; transform: translateY(12px) scale(.99); } to { opacity: 1; transform: translateY(0) scale(1); } }
+.guide-dialog > .eyebrow { width: fit-content; padding: 8px 11px; border: 1px solid #ecdcc5; border-radius: 999px; background: #fbf3e7; color: #966322; letter-spacing: .12em; }
+.guide-dialog h2 { max-width: 610px; color: #1d2b37; }
+.guide-intro { padding: 20px 22px; border-left: 3px solid var(--accent); border-radius: 0 13px 13px 0; background: rgba(244,233,214,.55); color: #46525d; font-family: 'Playfair Display', serif; font-size: 18px; line-height: 1.7; }
+.guide-schedule article { padding-top: 5px; }
+.guide-schedule article > div { padding: 0 0 14px; }
+.guide-schedule strong { color: #293846; font-size: 15px; }
+.guide-schedule p { max-width: 540px; line-height: 1.75; }
+.guide-tips { padding: 0; list-style: none; }
+.guide-tips li { position: relative; padding: 12px 14px 12px 38px; border: 1px solid #eee8dd; border-radius: 11px; background: rgba(255,255,255,.68); }
+.guide-tips li::before { position: absolute; top: 13px; left: 14px; color: var(--accent); content: '✦'; }
+.guide-info-grid article { border-color: #e9e1d5; background: rgba(250,247,241,.82); }
+.guide-info-grid h3 { color: #334351; }
+.guide-disclaimer { padding-top: 14px; border-top: 1px solid var(--line); }
+@media (prefers-reduced-motion: reduce) { .guide-dialog { animation: none; } }
