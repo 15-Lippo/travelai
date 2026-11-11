@@ -3,7 +3,9 @@
 import { useState } from 'react'
 import {
   ArrowRight,
+  BookOpen,
   CalendarDays,
+  LoaderCircle,
   Compass,
   Gem,
   Globe2,
@@ -61,6 +63,9 @@ export function TravelPlanner() {
   const [freeItineraryUsed, setFreeItineraryUsed] = useState(false)
   const [unlimitedAccess, setUnlimitedAccess] = useState(false)
   const [paywallOpen, setPaywallOpen] = useState(false)
+  const [guideLoading, setGuideLoading] = useState(false)
+  const [guideError, setGuideError] = useState('')
+  const [activeGuide, setActiveGuide] = useState<{ day: number; title: string; guide: { introduction: string; schedule: { time: string; title: string; details: string }[]; localTips: string[]; gettingAround: string; foodNearby: string; estimatedBudget: string } } | null>(null)
 
   const toggleStyle = (name: string) => {
     setSelectedStyles((current) => current.includes(name) ? current.filter((item) => item !== name) : [...current, name])
@@ -76,6 +81,22 @@ export function TravelPlanner() {
     setFreeItineraryUsed(true)
     setSavedTrips((current) => current.includes(destination.trim()) ? current : [...current, destination.trim()])
     window.setTimeout(() => document.getElementById('itinerary')?.scrollIntoView({ behavior: 'smooth' }), 50)
+  }
+
+  const openDayGuide = async (day: number, title: string, activities: string[]) => {
+    setGuideLoading(true)
+    setGuideError('')
+    try {
+      const response = await fetch('/api/day-guide', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ destination, dayNumber: day, title, activities, travelStyles: selectedStyles }) })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error || 'The guide could not be created.')
+      setActiveGuide({ day, title, guide: data.guide })
+    } catch {
+      setActiveGuide({ day, title, guide: { introduction: `A considered day in ${destination}, shaped around ${title.toLowerCase()} and the pace you selected. Leave room between the headline sights for a coffee, a view, or a small detour.`, schedule: activities.slice(0, 4).map((activity, index) => ({ time: ['09:00', '11:30', '14:30', '19:00'][index], title: activity, details: `Keep this as the anchor for the ${index < 2 ? 'morning' : index === 2 ? 'afternoon' : 'evening'}. Check the official venue page before setting out and allow extra time for the transition.` })), localTips: ['Book timed-entry experiences from the official source when available.', 'Keep a little cash for small cafés, markets, and local transport.', 'The best moments often come from leaving one hour unscheduled.'], gettingAround: `Use the linked map pins for each stop and group the first two activities on foot where possible. For longer transfers, compare local transport options before leaving.`, foodNearby: `Look for a busy neighborhood market or a small restaurant near your final stop rather than crossing the city for dinner.`, estimatedBudget: 'Varies by season and style; allow a flexible daily budget for transport, meals, and admissions.' } })
+      setGuideError('AI guide service unavailable, so we opened a thoughtful offline version instead.')
+    } finally {
+      setGuideLoading(false)
+    }
   }
 
   return (
@@ -132,7 +153,7 @@ export function TravelPlanner() {
 
       {submitted && <section className="itinerary-section" id="itinerary" aria-live="polite">
         <div className="itinerary-heading"><div><p className="eyebrow warm">Your personal route</p><h2>{destination}, thoughtfully planned.</h2><p>{duration} with {selectedStyles.length ? selectedStyles.join(', ').toLowerCase() : 'a balanced mix of'} experiences, stays, and local moments.</p></div><div className="itinerary-actions"><img src="/travel-hero.png" alt={`${destination} travel illustration`} /><button className="outline-button" onClick={() => window.print()}><CalendarDays size={16} /> Save itinerary</button></div></div>
-        <div className="itinerary-days">{itineraryDays.slice(0, Number.parseInt(duration, 10)).map((item, index) => <article className="day-card" key={`${item.title}-${index}`}><div className="day-label">Day {index + 1}</div><h3>{item.title}</h3><ul>{item.stops.map((stop) => <li key={stop}><a href={mapLink(destination, stop)} target="_blank" rel="noreferrer"><MapPin size={14} />{stop}<ArrowRight size={13} /></a></li>)}</ul><div className="booking-links"><a href={bookingLink(destination)} target="_blank" rel="noreferrer">Book stays <ArrowRight size={14} /></a><a href={activityLink()} target="_blank" rel="noreferrer">Tickets & tours <ArrowRight size={14} /></a><a href={`https://www.google.com/travel/flights?q=flights%20to%20${encodeURIComponent(destination)}`} target="_blank" rel="noreferrer">Find flights <ArrowRight size={14} /></a><a href={transportLink()} target="_blank" rel="noreferrer">Transfers & local transport <ArrowRight size={14} /></a></div></article>)}</div>
+        <div className="itinerary-days">{itineraryDays.slice(0, Number.parseInt(duration, 10)).map((item, index) => <article className="day-card" key={`${item.title}-${index}`}><div className="day-label">Day {index + 1}</div><h3>{item.title}</h3><ul>{item.stops.map((stop) => <li key={stop}><a href={mapLink(destination, stop)} target="_blank" rel="noreferrer"><MapPin size={14} />{stop}<ArrowRight size={13} /></a></li>)}</ul><div className="booking-links"><a href={bookingLink(destination)} target="_blank" rel="noreferrer">Book stays <ArrowRight size={14} /></a><a href={activityLink()} target="_blank" rel="noreferrer">Tickets & tours <ArrowRight size={14} /></a><a href={`https://www.google.com/travel/flights?q=flights%20to%20${encodeURIComponent(destination)}`} target="_blank" rel="noreferrer">Find flights <ArrowRight size={14} /></a><a href={transportLink()} target="_blank" rel="noreferrer">Transfers & local transport <ArrowRight size={14} /></a></div><button className="guide-button" onClick={() => openDayGuide(index + 1, item.title, item.stops)} disabled={guideLoading}>{guideLoading ? <LoaderCircle size={15} className="spin" /> : <BookOpen size={15} />} {guideLoading ? 'Composing your guide…' : 'Open detailed day guide'} <ArrowRight size={14} /></button></article>)}</div>
         <div className="route-note"><Sparkles size={17} /><span><strong>Smart routing</strong> Groups nearby places together to reduce transit time.</span></div>
       </section>}
 
@@ -145,6 +166,8 @@ export function TravelPlanner() {
       <footer><div className="footer-brand"><span className="brand-mark"><Plane size={16} /></span><span>travel AI</span></div><p>Thoughtful trips, beautifully planned.</p><span>© 2026 travel AI</span></footer>
       {signInOpen && <div className="modal-backdrop" role="presentation" onClick={() => setSignInOpen(false)}><section className="sign-in-modal" role="dialog" aria-modal="true" aria-labelledby="sign-in-title" onClick={(event) => event.stopPropagation()}><button className="modal-close" onClick={() => setSignInOpen(false)} aria-label="Close sign in"><X size={18} /></button><p className="eyebrow">Welcome back</p><h2 id="sign-in-title">Sign in to travel AI</h2><p>Save your itineraries and pick up planning wherever you left off.</p><input aria-label="Email address" type="email" placeholder="you@example.com" /><button className="generate-button" onClick={() => setSignInOpen(false)}>Continue <ArrowRight size={18} /></button></section></div>}
       {paywallOpen && <div className="modal-backdrop" role="presentation" onClick={() => setPaywallOpen(false)}><section className="sign-in-modal paywall-modal" role="dialog" aria-modal="true" aria-labelledby="paywall-title" onClick={(event) => event.stopPropagation()}><button className="modal-close" onClick={() => setPaywallOpen(false)} aria-label="Close access offer"><X size={18} /></button><p className="eyebrow warm">Travel AI unlimited</p><h2 id="paywall-title">Keep planning without limits.</h2><p>Your first itinerary is free. Unlock unlimited trips, saved routes, photos, and local guides for one year.</p><div className="paywall-price"><strong>$9</strong><span>per year</span></div><a className="generate-button" href="https://klook.tpk.mx/qObGvP9b" target="_blank" rel="noreferrer" onClick={() => { setUnlimitedAccess(true); setPaywallOpen(false) }}>Unlock unlimited access <ArrowRight size={18} /></a></section></div>}
+      {activeGuide && <div className="modal-backdrop" role="presentation" onClick={() => setActiveGuide(null)}><section className="guide-dialog sign-in-modal" role="dialog" aria-modal="true" aria-labelledby="guide-title" onClick={(event) => event.stopPropagation()}><button className="modal-close" onClick={() => setActiveGuide(null)} aria-label="Close day guide"><X size={18} /></button><p className="eyebrow">Day {activeGuide.day} · AI-composed guide</p><h2 id="guide-title">{activeGuide.title}</h2><p className="guide-intro">{activeGuide.guide.introduction}</p><div className="guide-schedule">{activeGuide.guide.schedule.map((entry) => <article key={`${entry.time}-${entry.title}`}><strong>{entry.time}</strong><h3>{entry.title}</h3><p>{entry.details}</p></article>)}</div><div className="guide-info-grid"><article><h3>Getting around</h3><p>{activeGuide.guide.gettingAround}</p></article><article><h3>Food nearby</h3><p>{activeGuide.guide.foodNearby}</p></article><article><h3>Estimated budget</h3><p>{activeGuide.guide.estimatedBudget}</p></article></div><ul className="guide-tips">{activeGuide.guide.localTips.map((tip) => <li key={tip}>{tip}</li>)}</ul><p className="guide-disclaimer">AI suggestions are a starting point. Check official sources before booking.</p></section></div>}
+      {guideError && <div className="guide-error" role="alert">{guideError}<button onClick={() => setGuideError('')} aria-label="Dismiss guide error"><X size={15} /></button></div>}
     </main>
   )
 }
