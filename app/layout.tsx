@@ -2,10 +2,11 @@ import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import './day-guides.css'
+import './vacation-agent.css'
 
 export const metadata: Metadata = {
-  title: 'travel AI — Thoughtful trips, beautifully planned',
-  description: 'Create a day-by-day travel itinerary with local insider tips in seconds.',
+  title: 'travel AI — Your personal vacation designer',
+  description: 'Plan a remarkable, personalized vacation with a thoughtful AI travel agent.',
   generator: 'v0.app',
 }
 
