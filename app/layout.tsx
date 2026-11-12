@@ -3,8 +3,8 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'travel AI — Thoughtful trips, beautifully planned',
-  description: 'Create a day-by-day travel itinerary with local insider tips in seconds.',
+  title: 'travel AI — Your personal AI travel designer',
+  description: 'Create a photo-rich, day-by-day vacation plan with thoughtful local recommendations, restaurants, excursions, and booking links.',
   generator: 'v0.app',
 }
 

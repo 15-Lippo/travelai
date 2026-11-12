@@ -1,173 +1,115 @@
 'use client'
 
-import { useState } from 'react'
-import {
-  ArrowRight,
-  BookOpen,
-  CalendarDays,
-  LoaderCircle,
-  Compass,
-  Gem,
-  Globe2,
-  HeartHandshake,
-  Lightbulb,
-  LogIn,
-  LockKeyhole,
-  MapPin,
-  Menu,
-  Moon,
-  Plane,
-  Sparkles,
-  Utensils,
-  Users,
-  WalletCards,
-  X,
-} from 'lucide-react'
+import { useState, type FormEvent } from 'react'
+import { ArrowRight, CalendarDays, Check, Compass, Hotel, MapPin, Menu, Plane, Sparkles, Utensils, Users, Wallet, X, Heart } from 'lucide-react'
 
-const styles = [
-  { name: 'Adventure', detail: 'Hikes & thrills', icon: Compass },
-  { name: 'Budget', detail: 'Smart & savvy', icon: WalletCards },
-  { name: 'Luxury', detail: 'Refined stays', icon: Gem },
-  { name: 'Foodie', detail: 'Eat like a local', icon: Utensils },
-  { name: 'Family', detail: 'All ages welcome', icon: Users },
-  { name: 'Relaxation', detail: 'Slow & restful', icon: HeartHandshake },
-]
+type Photo = { url: string; attribution: string; sourceUrl: string } | null
+type Activity = { time: string; title: string; place: string; details: string; duration: string }
+type Plan = {
+  headline: string; overview: string; destinationFit: string; bestTimeNote: string
+  days: { title: string; theme: string; activities: Activity[]; photo: Photo }[]
+  restaurants: { name: string; cuisine: string; whyItFits: string; priceLevel: string; area: string }[]
+  excursions: { name: string; description: string; duration: string; effort: string }[]
+  stayAdvice: { area: string; reason: string; style: string }; transportAdvice: string
+  budgetBreakdown: { category: string; estimate: string }[]; budgetNote: string
+}
 
-const itineraryDays = [
-  { title: 'Arrival & first impressions', stops: ['Check in to your hotel', 'Sunset viewpoint walk', 'Local trattoria dinner'] },
-  { title: 'The essential sights', stops: ['Guided city highlights tour', 'Lunch at a neighborhood market', 'Evening food experience'] },
-  { title: 'A day beyond the city', stops: ['Scenic day trip', 'Small-group excursion', 'Return transfer'] },
-  { title: 'Local life & hidden corners', stops: ['Neighborhood coffee walk', 'Independent shops and makers', 'Golden-hour aperitivo'] },
-  { title: 'Culture, coast & cuisine', stops: ['Museum or landmark visit', 'Market-to-table lunch', 'Dinner with a local view'] },
-  { title: 'The slow travel day', stops: ['A relaxed morning in the old town', 'Regional tasting experience', 'Sunset by the water'] },
-  { title: 'Final favourites', stops: ['Revisit your favourite place', 'Last-minute local discoveries', 'Farewell dinner'] },
-  { title: 'A little further out', stops: ['Countryside or island escape', 'Small-group day excursion', 'Return to your stay'] },
-  { title: 'The food trail', stops: ['Local bakery breakfast', 'Chef-led food experience', 'Night market stroll'] },
-  { title: 'Goodbye, for now', stops: ['Pack and check out', 'One final viewpoint', 'Airport or station transfer'] },
-]
+const travelStyles = ['Culture', 'Food & wine', 'Nature', 'Adventure', 'Relaxation', 'Family', 'Romantic', 'Luxury']
+const interests = ['Landmarks', 'Local neighborhoods', 'Museums', 'Beaches', 'Markets', 'Nightlife', 'Shopping', 'Outdoor activities']
 
-const bookingLink = (destination: string) => `https://www.expedia.com/Hotel-Search?destination=${encodeURIComponent(destination)}`
-const activityLink = () => 'https://klook.tpk.mx/qObGvP9b'
-const transportLink = () => 'https://klook.tpk.mx/qObGvP9b'
-const mapLink = (destination: string, stop: string) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${stop}, ${destination}`)}`
+function partnerLink(template: string | undefined, fallback: string, query: string) {
+  return template ? template.replaceAll('{query}', encodeURIComponent(query)) : fallback
+}
 
 export function TravelPlanner() {
   const [destination, setDestination] = useState('')
-  const [duration, setDuration] = useState('5 days')
-  const [selectedStyles, setSelectedStyles] = useState<string[]>([])
+  const [duration, setDuration] = useState('5')
+  const [travelers, setTravelers] = useState('2')
+  const [dates, setDates] = useState('')
+  const [budget, setBudget] = useState('mid-range')
+  const [selectedStyles, setSelectedStyles] = useState<string[]>(['Culture', 'Food & wine'])
+  const [selectedInterests, setSelectedInterests] = useState<string[]>(['Landmarks', 'Local neighborhoods'])
+  const [needs, setNeeds] = useState('')
+  const [plan, setPlan] = useState<Plan | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [errorHelpUrl, setErrorHelpUrl] = useState<string | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
-  const [submitted, setSubmitted] = useState(false)
-  const [darkMode, setDarkMode] = useState(false)
-  const [signInOpen, setSignInOpen] = useState(false)
-  const [savedTrips, setSavedTrips] = useState<string[]>([])
-  const [freeItineraryUsed, setFreeItineraryUsed] = useState(false)
-  const [unlimitedAccess, setUnlimitedAccess] = useState(false)
-  const [paywallOpen, setPaywallOpen] = useState(false)
-  const [guideLoading, setGuideLoading] = useState(false)
-  const [guideError, setGuideError] = useState('')
-  const [activeGuide, setActiveGuide] = useState<{ day: number; title: string; guide: { introduction: string; schedule: { time: string; title: string; details: string }[]; localTips: string[]; gettingAround: string; foodNearby: string; estimatedBudget: string } } | null>(null)
 
-  const toggleStyle = (name: string) => {
-    setSelectedStyles((current) => current.includes(name) ? current.filter((item) => item !== name) : [...current, name])
-  }
+  const toggle = (value: string, list: string[], setter: (next: string[]) => void) =>
+    setter(list.includes(value) ? list.filter((item) => item !== value) : [...list, value])
 
-  const submit = () => {
-    if (!destination.trim()) return
-    if (freeItineraryUsed && !unlimitedAccess) {
-      setPaywallOpen(true)
-      return
-    }
-    setSubmitted(true)
-    setFreeItineraryUsed(true)
-    setSavedTrips((current) => current.includes(destination.trim()) ? current : [...current, destination.trim()])
-    window.setTimeout(() => document.getElementById('itinerary')?.scrollIntoView({ behavior: 'smooth' }), 50)
-  }
-
-  const openDayGuide = async (day: number, title: string, activities: string[]) => {
-    setGuideLoading(true)
-    setGuideError('')
+  async function createPlan(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+  if (!destination.trim()) { setError('Add a destination to get started.'); setErrorHelpUrl(null); return }
+  setLoading(true); setError(''); setErrorHelpUrl(null); setPlan(null)
     try {
-      const response = await fetch('/api/day-guide', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ destination, dayNumber: day, title, activities, travelStyles: selectedStyles }) })
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.error || 'The guide could not be created.')
-      setActiveGuide({ day, title, guide: data.guide })
-    } catch {
-      setActiveGuide({ day, title, guide: { introduction: `A considered day in ${destination}, shaped around ${title.toLowerCase()} and the pace you selected. Leave room between the headline sights for a coffee, a view, or a small detour.`, schedule: activities.slice(0, 4).map((activity, index) => ({ time: ['09:00', '11:30', '14:30', '19:00'][index], title: activity, details: `Keep this as the anchor for the ${index < 2 ? 'morning' : index === 2 ? 'afternoon' : 'evening'}. Check the official venue page before setting out and allow extra time for the transition.` })), localTips: ['Book timed-entry experiences from the official source when available.', 'Keep a little cash for small cafés, markets, and local transport.', 'The best moments often come from leaving one hour unscheduled.'], gettingAround: `Use the linked map pins for each stop and group the first two activities on foot where possible. For longer transfers, compare local transport options before leaving.`, foodNearby: `Look for a busy neighborhood market or a small restaurant near your final stop rather than crossing the city for dinner.`, estimatedBudget: 'Varies by season and style; allow a flexible daily budget for transport, meals, and admissions.' } })
-      setGuideError('AI guide service unavailable, so we opened a thoughtful offline version instead.')
-    } finally {
-      setGuideLoading(false)
-    }
+      const response = await fetch('/api/vacation-plan', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ destination, duration, travelers, dates, budget, travelStyles: selectedStyles, interests: selectedInterests, needs }),
+      })
+  const result = await response.json()
+  if (!response.ok) {
+    setError(result.error || 'We could not create your plan.')
+    setErrorHelpUrl(result.helpUrl || null)
+    return
+  }
+  setPlan(result.plan as Plan)
+      window.setTimeout(() => document.getElementById('your-trip')?.scrollIntoView({ behavior: 'smooth' }), 100)
+  } catch (caught) {
+  setError(caught instanceof Error ? caught.message : 'Something went wrong. Please try again.')
+  setErrorHelpUrl(null)
+  } finally { setLoading(false) }
   }
 
-  return (
-    <main className={darkMode ? 'travel-app dark-mode' : 'travel-app'}>
-      <header className="site-header">
-        <a className="brand" href="#top" aria-label="travel AI home">
-          <span className="brand-mark"><Plane size={16} strokeWidth={2.5} /></span>
-          <span>travel AI</span>
-        </a>
-        <nav className={menuOpen ? 'nav-links nav-open' : 'nav-links'} aria-label="Main navigation">
-          <a href="#how">How it works</a>
-          <a href="#about">About</a>
-          <a href="#saved">My trips</a>
-          <button className="theme-button" aria-label="Toggle theme" aria-pressed={darkMode} onClick={() => setDarkMode((current) => !current)}><Moon size={17} /></button>
-          <button className="sign-in" onClick={() => setSignInOpen(true)}><LogIn size={16} /> Sign in</button>
-        </nav>
-        <button className="menu-button" onClick={() => setMenuOpen(!menuOpen)} aria-label={menuOpen ? 'Close menu' : 'Open menu'}>
-          {menuOpen ? <X size={22} /> : <Menu size={22} />}
-        </button>
-      </header>
+  const hotelUrl = partnerLink(process.env.NEXT_PUBLIC_TP_HOTEL_URL, `https://www.expedia.com/Hotel-Search?destination=${encodeURIComponent(destination)}`, destination)
+  const flightUrl = partnerLink(process.env.NEXT_PUBLIC_TP_FLIGHT_URL, `https://www.google.com/travel/flights?q=${encodeURIComponent(`flights to ${destination}`)}`, destination)
+  const activityUrl = partnerLink(process.env.NEXT_PUBLIC_TP_ACTIVITY_URL, 'https://klook.tpk.mx/qObGvP9b', destination)
 
-      <section className="hero" id="top">
-        <div className="hero-overlay" />
-        <div className="hero-content">
-          <p className="eyebrow"><Sparkles size={14} /> Your next adventure starts here</p>
-          <h1>Travel, <em>beautifully</em> planned.</h1>
-          <p className="hero-copy">Tell us where and how you like to travel. Get a day-by-day itinerary with local insider tips in seconds.</p>
+  return <main className="travel-app vacation-app">
+    <header className="site-header">
+      <a className="brand" href="#top" aria-label="travel AI home"><span className="brand-mark"><Plane size={16} /></span><span>travel AI</span></a>
+      <nav className={menuOpen ? 'nav-links nav-open' : 'nav-links'} aria-label="Main navigation"><a href="#how">How it works</a><a href="#your-trip">Your trip</a><a href="#booking">Book your trip</a></nav>
+      <button className="menu-button" onClick={() => setMenuOpen(!menuOpen)} aria-label={menuOpen ? 'Close menu' : 'Open menu'} aria-expanded={menuOpen}>{menuOpen ? <X size={21} /> : <Menu size={21} />}</button>
+    </header>
 
-          <section className="planner-card" aria-label="Trip planner">
-            <div className="form-grid">
-              <label className="field destination-field">
-                <span>Destination</span>
-                <div className="input-shell"><MapPin size={17} /><input value={destination} onChange={(event) => setDestination(event.target.value)} placeholder="e.g., Tokyo, Iceland, Amalfi Coast" /></div>
-              </label>
-              <label className="field">
-                <span>Trip duration</span>
-                <select value={duration} onChange={(event) => setDuration(event.target.value)}>
-                  <option>3 days</option><option>5 days</option><option>7 days</option><option>10 days</option><option>14 days</option>
-                </select>
-              </label>
-            </div>
-            <div className="style-heading"><span>Travel style</span><button onClick={() => setSelectedStyles([])}>Choose any</button></div>
-            <div className="style-grid">
-              {styles.map(({ name, detail, icon: Icon }) => <button key={name} className={selectedStyles.includes(name) ? 'style-option selected' : 'style-option'} onClick={() => toggleStyle(name)} aria-pressed={selectedStyles.includes(name)}><span className="style-icon"><Icon size={17} /></span><strong>{name}</strong><small>{detail}</small></button>)}
-            </div>
-            <div className="access-status" role="status">
-              {unlimitedAccess ? <><Sparkles size={15} /> Unlimited access active</> : freeItineraryUsed ? <><LockKeyhole size={15} /> Free itinerary used · <button type="button" onClick={() => setPaywallOpen(true)}>Unlock access</button></> : <><Sparkles size={15} /> Your first itinerary is free</>}
-            </div>
-            <button className="generate-button" onClick={submit}>{freeItineraryUsed && !unlimitedAccess ? 'Unlock unlimited itineraries' : 'Generate itinerary'} <ArrowRight size={18} /></button>
-            {submitted && <p className="success-message" role="status">Your {duration} {destination} adventure is ready to explore.</p>}
-          </section>
+    <section className="agent-hero" id="top"><div className="agent-hero-image" aria-hidden="true"/><div className="agent-hero-shade" aria-hidden="true"/><div className="agent-hero-inner">
+      <p className="agent-kicker"><Sparkles size={15}/> YOUR PERSONAL AI TRAVEL DESIGNER</p><h1>A remarkable trip,<br/><em>made yours.</em></h1><p className="agent-lede">Tell us what makes a holiday unforgettable. Get a thoughtful, photo-rich plan built around your people, pace and priorities.</p>
+      <form className="agent-form" onSubmit={createPlan}>
+        <label className="agent-field agent-destination"><span>Where would you like to go?</span><div><MapPin size={18}/><input required value={destination} onChange={(event) => setDestination(event.target.value)} placeholder="A city, region, or country" /></div></label>
+        <div className="agent-form-row">
+          <label className="agent-field"><span><CalendarDays size={14}/> When?</span><input type="text" value={dates} onChange={(event) => setDates(event.target.value)} placeholder="Dates or flexible" /></label>
+          <label className="agent-field"><span><Compass size={14}/> How long?</span><select value={duration} onChange={(event) => setDuration(event.target.value)}>{[3,5,7,10,14].map((days) => <option key={days} value={days}>{days} days</option>)}</select></label>
+          <label className="agent-field"><span><Users size={14}/> Travelers</span><select value={travelers} onChange={(event) => setTravelers(event.target.value)}>{[1,2,3,4,5,6,8,10,12].map((count) => <option key={count} value={count}>{count} {count === 1 ? 'traveler' : 'travelers'}</option>)}</select></label>
+          <label className="agent-field"><span><Wallet size={14}/> Budget</span><select value={budget} onChange={(event) => setBudget(event.target.value)}><option value="budget">Value conscious</option><option value="mid-range">Comfortable</option><option value="premium">Premium</option><option value="luxury">Luxury</option></select></label>
         </div>
-      </section>
+        <fieldset className="agent-choices"><legend>Your travel mood</legend><div>{travelStyles.map((style) => <button type="button" key={style} className={selectedStyles.includes(style) ? 'agent-chip selected' : 'agent-chip'} aria-pressed={selectedStyles.includes(style)} onClick={() => toggle(style, selectedStyles, setSelectedStyles)}>{selectedStyles.includes(style) && <Check size={13}/>} {style}</button>)}</div></fieldset>
+        <fieldset className="agent-choices"><legend>What are you drawn to?</legend><div>{interests.map((interest) => <button type="button" key={interest} className={selectedInterests.includes(interest) ? 'agent-chip selected' : 'agent-chip'} aria-pressed={selectedInterests.includes(interest)} onClick={() => toggle(interest, selectedInterests, setSelectedInterests)}>{selectedInterests.includes(interest) && <Check size={13}/>} {interest}</button>)}</div></fieldset>
+        <label className="agent-field agent-needs"><span>Anything else we should know? <small>Accessibility, must-sees, pace, dietary needs…</small></span><textarea rows={2} maxLength={400} value={needs} onChange={(event) => setNeeds(event.target.value)} placeholder="Help us get the details right"/></label>
+        {error && <p className="agent-error" role="alert">{error}{errorHelpUrl && <> <a href={errorHelpUrl} target="_blank" rel="noopener noreferrer">Open AI Gateway settings</a></>}</p>}
+        <button className="agent-submit" type="submit" disabled={loading}>{loading ? <><span className="agent-loader"/> Designing your trip…</> : <><Sparkles size={17}/> Design my vacation <ArrowRight size={17}/></>}</button>
+        <p className="agent-privacy">A considered first draft, shaped around you. You can refine it anytime.</p>
+      </form>
+    </div></section>
 
-      {submitted && <section className="itinerary-section" id="itinerary" aria-live="polite">
-        <div className="itinerary-heading"><div><p className="eyebrow warm">Your personal route</p><h2>{destination}, thoughtfully planned.</h2><p>{duration} with {selectedStyles.length ? selectedStyles.join(', ').toLowerCase() : 'a balanced mix of'} experiences, stays, and local moments.</p></div><div className="itinerary-actions"><img src="/travel-hero.png" alt={`${destination} travel illustration`} /><button className="outline-button" onClick={() => window.print()}><CalendarDays size={16} /> Save itinerary</button></div></div>
-        <div className="itinerary-days">{itineraryDays.slice(0, Number.parseInt(duration, 10)).map((item, index) => <article className="day-card" key={`${item.title}-${index}`}><div className="day-label">Day {index + 1}</div><h3>{item.title}</h3><ul>{item.stops.map((stop) => <li key={stop}><a href={mapLink(destination, stop)} target="_blank" rel="noreferrer"><MapPin size={14} />{stop}<ArrowRight size={13} /></a></li>)}</ul><div className="booking-links"><a href={bookingLink(destination)} target="_blank" rel="noreferrer">Book stays <ArrowRight size={14} /></a><a href={activityLink()} target="_blank" rel="noreferrer">Tickets & tours <ArrowRight size={14} /></a><a href={`https://www.google.com/travel/flights?q=flights%20to%20${encodeURIComponent(destination)}`} target="_blank" rel="noreferrer">Find flights <ArrowRight size={14} /></a><a href={transportLink()} target="_blank" rel="noreferrer">Transfers & local transport <ArrowRight size={14} /></a></div><button className="guide-button" onClick={() => openDayGuide(index + 1, item.title, item.stops)} disabled={guideLoading}>{guideLoading ? <LoaderCircle size={15} className="spin" /> : <BookOpen size={15} />} {guideLoading ? 'Composing your guide…' : 'Open detailed day guide'} <ArrowRight size={14} /></button></article>)}</div>
-        <div className="route-note"><Sparkles size={17} /><span><strong>Smart routing</strong> Groups nearby places together to reduce transit time.</span></div>
-      </section>}
+    {plan && <section className="trip-results" id="your-trip"><div className="trip-intro"><p className="agent-kicker dark"><Sparkles size={14}/> YOUR TRIP, THOUGHTFULLY DESIGNED</p><h2>{plan.headline}</h2><p className="trip-overview">{plan.overview}</p><div className="trip-fit"><Heart size={17}/><span><strong>Why it suits you</strong>{plan.destinationFit}</span></div><p className="trip-season"><CalendarDays size={16}/>{plan.bestTimeNote}</p></div>
+      <div className="trip-section-heading"><div><span>THE JOURNEY</span><h3>Your days, beautifully paced</h3></div><p>Real places, sensible pacing, and room to wander.</p></div>
+      <div className="agent-days">{plan.days.map((day, index) => <article className="agent-day" key={`${index}-${day.title}`}>
+        <div className="agent-day-photo">{day.photo ? <><img src={day.photo.url} alt={`${day.activities[0]?.place || day.title} in ${destination}`} loading={index < 2 ? 'eager' : 'lazy'}/><a className="photo-credit" href={day.photo.sourceUrl} target="_blank" rel="noreferrer">Photo: {day.photo.attribution}</a></> : <div className="photo-fallback"><MapPin size={27}/><span>Discover {destination}</span></div>}<span className="day-number">DAY {String(index + 1).padStart(2, '0')}</span></div>
+        <div className="agent-day-copy"><p className="day-theme">{day.theme}</p><h3>{day.title}</h3><div className="agent-activities">{day.activities.map((activity, i) => <div className="agent-activity" key={`${activity.time}-${i}`}><span>{activity.time}</span><div><strong>{activity.title}</strong><p><MapPin size={13}/>{activity.place} <span>· {activity.duration}</span></p><p>{activity.details}</p></div></div>)}</div><a className="day-map-link" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${day.activities[0]?.place}, ${destination}`)}`} target="_blank" rel="noreferrer">Explore this day on Maps <ArrowRight size={14}/></a></div>
+      </article>)}</div>
 
-      <section className="benefits" id="how">
-        {[['Morning to night', 'Every day split into morning, afternoon, and evening blocks.', Lightbulb], ['Insider tips', 'One local secret per day that guidebooks miss.', Globe2], ['Smart routing', 'Nearby sights grouped together, so less time in transit.', Compass]].map(([title, text, Icon]) => <article className="benefit-card" key={title as string}><Icon size={21} /><h2>{title as string}</h2><p>{text as string}</p></article>)}
-      </section>
+      <div className="trip-section-heading"><div><span>GOOD TASTE, WELL FOUND</span><h3>Tables worth seeking out</h3></div><Utensils size={22}/></div><div className="recommendation-grid">{plan.restaurants.map((restaurant, index) => <article className="recommendation-card" key={`${restaurant.name}-${index}`}><span className="recommendation-index">0{index + 1} · {restaurant.priceLevel}</span><h4>{restaurant.name}</h4><p className="recommendation-meta">{restaurant.cuisine} · {restaurant.area}</p><p>{restaurant.whyItFits}</p><a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${restaurant.name} ${restaurant.area} ${destination}`)}`} target="_blank" rel="noreferrer">View on Maps <ArrowRight size={14}/></a></article>)}</div>
 
-      <section className="story-section" id="about"><div><p className="eyebrow warm">Made for curious travelers</p><h2>More than a plan.<br /><em>A feeling to follow.</em></h2></div><p>We turn the overwhelming parts of travel into a thoughtful route you will actually want to take. Less research, more wonder.</p></section>
-      <section className="saved-section" id="saved" aria-live="polite"><div><p className="eyebrow warm">Your saved trips</p><h2>Keep the <em>wonder</em> close.</h2></div>{savedTrips.length === 0 ? <p className="empty-trips">Generate an itinerary and it will appear here.</p> : <div className="trip-list">{savedTrips.map((trip) => <button key={trip} className="trip-card" onClick={() => { setDestination(trip); setSubmitted(false); document.getElementById('top')?.scrollIntoView({ behavior: 'smooth' }) }}><MapPin size={16} /><span>{trip}</span><ArrowRight size={16} /></button>)}</div>}</section>
-      <footer><div className="footer-brand"><span className="brand-mark"><Plane size={16} /></span><span>travel AI</span></div><p>Thoughtful trips, beautifully planned.</p><span>© 2026 travel AI</span></footer>
-      {signInOpen && <div className="modal-backdrop" role="presentation" onClick={() => setSignInOpen(false)}><section className="sign-in-modal" role="dialog" aria-modal="true" aria-labelledby="sign-in-title" onClick={(event) => event.stopPropagation()}><button className="modal-close" onClick={() => setSignInOpen(false)} aria-label="Close sign in"><X size={18} /></button><p className="eyebrow">Welcome back</p><h2 id="sign-in-title">Sign in to travel AI</h2><p>Save your itineraries and pick up planning wherever you left off.</p><input aria-label="Email address" type="email" placeholder="you@example.com" /><button className="generate-button" onClick={() => setSignInOpen(false)}>Continue <ArrowRight size={18} /></button></section></div>}
-      {paywallOpen && <div className="modal-backdrop" role="presentation" onClick={() => setPaywallOpen(false)}><section className="sign-in-modal paywall-modal" role="dialog" aria-modal="true" aria-labelledby="paywall-title" onClick={(event) => event.stopPropagation()}><button className="modal-close" onClick={() => setPaywallOpen(false)} aria-label="Close access offer"><X size={18} /></button><p className="eyebrow warm">Travel AI unlimited</p><h2 id="paywall-title">Keep planning without limits.</h2><p>Your first itinerary is free. Unlock unlimited trips, saved routes, photos, and local guides for one year.</p><div className="paywall-price"><strong>$9</strong><span>per year</span></div><a className="generate-button" href="https://klook.tpk.mx/qObGvP9b" target="_blank" rel="noreferrer" onClick={() => { setUnlimitedAccess(true); setPaywallOpen(false) }}>Unlock unlimited access <ArrowRight size={18} /></a></section></div>}
-      {activeGuide && <div className="modal-backdrop" role="presentation" onClick={() => setActiveGuide(null)}><section className="guide-dialog sign-in-modal" role="dialog" aria-modal="true" aria-labelledby="guide-title" onClick={(event) => event.stopPropagation()}><button className="modal-close" onClick={() => setActiveGuide(null)} aria-label="Close day guide"><X size={18} /></button><p className="eyebrow">Day {activeGuide.day} · AI-composed guide</p><h2 id="guide-title">{activeGuide.title}</h2><p className="guide-intro">{activeGuide.guide.introduction}</p><div className="guide-schedule">{activeGuide.guide.schedule.map((entry) => <article key={`${entry.time}-${entry.title}`}><strong>{entry.time}</strong><h3>{entry.title}</h3><p>{entry.details}</p></article>)}</div><div className="guide-info-grid"><article><h3>Getting around</h3><p>{activeGuide.guide.gettingAround}</p></article><article><h3>Food nearby</h3><p>{activeGuide.guide.foodNearby}</p></article><article><h3>Estimated budget</h3><p>{activeGuide.guide.estimatedBudget}</p></article></div><ul className="guide-tips">{activeGuide.guide.localTips.map((tip) => <li key={tip}>{tip}</li>)}</ul><p className="guide-disclaimer">AI suggestions are a starting point. Check official sources before booking.</p></section></div>}
-      {guideError && <div className="guide-error" role="alert">{guideError}<button onClick={() => setGuideError('')} aria-label="Dismiss guide error"><X size={15} /></button></div>}
-    </main>
-  )
+      <div className="trip-section-heading"><div><span>BEYOND THE EVERYDAY</span><h3>Worth going a little further</h3></div><Compass size={22}/></div><div className="excursion-grid">{plan.excursions.map((excursion, index) => <article className="excursion-card" key={`${excursion.name}-${index}`}><span>{excursion.duration} · {excursion.effort} effort</span><h4>{excursion.name}</h4><p>{excursion.description}</p><a href={activityUrl} target="_blank" rel="sponsored noopener noreferrer">Find experiences <ArrowRight size={14}/></a></article>)}</div>
+
+      <section className="trip-practical"><article className="stay-card"><Hotel size={20}/><span>WHERE TO STAY</span><h3>{plan.stayAdvice.area}</h3><p>{plan.stayAdvice.reason}</p><small>Best for: {plan.stayAdvice.style}</small></article><article className="transport-card"><Plane size={20}/><span>GETTING AROUND</span><h3>Move at your own pace</h3><p>{plan.transportAdvice}</p></article><article className="budget-card"><Wallet size={20}/><span>THE MONEY, MADE CLEAR</span><h3>A realistic budget guide</h3><div>{plan.budgetBreakdown.map((item, index) => <p key={`${item.category}-${index}`}><span>{item.category}</span><strong>{item.estimate}</strong></p>)}</div><small>{plan.budgetNote}</small></article></section>
+
+      <section className="booking-panel" id="booking"><div><p className="agent-kicker dark"><Sparkles size={14}/> WHEN YOU&apos;RE READY</p><h3>Make the lovely parts happen.</h3><p>Explore stays, flights and experiences for {destination}. Check current availability and prices with providers before booking.</p></div><div className="booking-actions"><a href={hotelUrl} target="_blank" rel="sponsored noopener noreferrer"><Hotel size={17}/> Find stays <ArrowRight size={15}/></a><a href={flightUrl} target="_blank" rel="sponsored noopener noreferrer"><Plane size={17}/> Compare flights <ArrowRight size={15}/></a><a href={activityUrl} target="_blank" rel="sponsored noopener noreferrer"><Compass size={17}/> Browse experiences <ArrowRight size={15}/></a></div><small className="affiliate-note">Some booking links may be affiliate links. Prices and availability are set by booking partners.</small></section>
+      <p className="plan-disclaimer">AI-generated inspiration, not live booking data. Verify venue details, operating hours, accessibility, travel advisories, and current costs with official sources.</p>
+    </section>}
+
+    <section className="agent-how" id="how"><div><span>01</span><p>Tell us what a great holiday means to you.</p></div><div><span>02</span><p>Get a considered itinerary with real places and destination imagery.</p></div><div><span>03</span><p>Explore travel partners when you&apos;re ready to book.</p></div></section>
+    <footer><div className="footer-brand"><span className="brand-mark"><Plane size={16}/></span><span>travel AI</span></div><p>Less searching. More somewhere wonderful.</p><span>© 2026 travel AI</span></footer>
+  </main>
 }
