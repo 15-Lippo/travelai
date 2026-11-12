@@ -1,4 +1,5 @@
 import { Analytics } from '@vercel/analytics/next'
+import Script from 'next/script'
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
@@ -14,5 +15,5 @@ export const viewport: Viewport = {
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en"><body className="antialiased">{children}{process.env.NODE_ENV === 'production' && <Analytics />}</body></html>
+  return <html lang="en"><body className="antialiased">{children}<Script id="travelpayouts-loader" src="https://tp-em.com/NTk5NzE5.js?t=599719" strategy="afterInteractive" data-cmp-ab="2" />{process.env.NODE_ENV === 'production' && <Analytics />}</body></html>
 }
