@@ -1,3 +1,4 @@
+import { createGoogle } from '@ai-sdk/google'
 import { generateText, Output } from 'ai'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
@@ -56,12 +57,20 @@ export async function POST(request: Request) {
   const dates = typeof input.dates === 'string' ? input.dates.slice(0, 80) : 'Flexible dates'
   const needs = typeof input.needs === 'string' ? input.needs.trim().slice(0, 400) : ''
   if (!destination) return NextResponse.json({ error: 'Enter a destination to build your vacation plan.' }, { status: 400 })
+  if (!process.env.GEMINI_API_KEY) {
+    return NextResponse.json({
+      error: 'Gemini API key is missing. Add a Google AI Studio key to use the free-tier model.',
+      helpUrl: 'https://aistudio.google.com/apikey',
+    }, { status: 503 })
+  }
 
   try {
+    const google = createGoogle({ apiKey: process.env.GEMINI_API_KEY })
     const { output } = await generateText({
-      model: process.env.TRAVEL_AI_MODEL || 'openai/gpt-4o-mini',
+      model: google('gemini-3.1-flash-lite'),
       output: Output.object({ schema: planSchema(duration), name: 'personal_vacation_plan' }),
       temperature: 0.55,
+      maxOutputTokens: 8192,
       prompt: `You are a meticulous independent AI travel planner. Create a coherent high-quality vacation for the traveler below. Return exactly ${duration} days. Every day must include 2-3 real, distinctive sights or places with realistic geographic grouping and sensible morning/afternoon/evening rhythm. Name only real places and restaurants you are reasonably confident exist; do not claim live availability or fabricate opening hours, prices, transit timetables, or booking status. Restaurant recommendations must be recognizable real venues only when confident; otherwise make the name explicitly cuisine-and-area based. Explain why each choice fits. Include 3-5 restaurants, 2-4 excursions, practical hotel-area advice, transport, and an estimated per-person budget breakdown appropriate to budget and duration. Clearly label estimates and exclusions. Adapt to travelers, dates, interests, style, budget, accessibility and other needs. Mention reasonable assumptions briefly. Write in polished, warm English.\n\nTraveler preferences: ${JSON.stringify({ destination, durationDays: duration, travelers, budget, travelStyles, interests, dates, additionalNeeds: needs })}`,
     })
     const photoDays = await Promise.all(output.days.map(async (day) => {
@@ -71,12 +80,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ plan: { ...output, days: photoDays } }, { headers: { 'Cache-Control': 'no-store' } })
   } catch (error) {
     console.error('[v0] Unable to build vacation plan:', error)
-    const needsPaymentMethod = error instanceof Error && /valid credit card on file/i.test(error.message)
+    const message = error instanceof Error ? error.message : ''
+    const quotaExceeded = /429|RESOURCE_EXHAUSTED|quota|rate limit/i.test(message)
+    const invalidKey = /API_KEY_INVALID|API key not valid|unauthenticated|401/i.test(message)
     return NextResponse.json({
-      error: needsPaymentMethod
-        ? 'AI Gateway needs a payment method on your Vercel team before it can generate this trip.'
-        : 'We could not complete this vacation plan. Please try again.',
-      ...(needsPaymentMethod ? { helpUrl: 'https://vercel.com/d?to=%2F%5Bteam%5D%2F%7E%2Fai%3Fmodal%3Dadd-credit-card' } : {}),
-    }, { status: 502 })
+      error: quotaExceeded
+        ? 'Gemini free-tier quota reached. Please wait before trying again.'
+        : invalidKey
+          ? 'Gemini rejected the API key. Check your Google AI Studio key and try again.'
+          : 'Gemini could not complete this vacation plan. Please try again.',
+      ...(quotaExceeded
+        ? { helpUrl: 'https://ai.google.dev/gemini-api/docs/rate-limits' }
+        : invalidKey
+          ? { helpUrl: 'https://aistudio.google.com/apikey' }
+          : {}),
+    }, { status: quotaExceeded ? 429 : invalidKey ? 401 : 502 })
   }
 }
