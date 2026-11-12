@@ -86,9 +86,9 @@ export function TravelPlanner() {
         <fieldset className="agent-choices"><legend>Your travel mood</legend><div>{travelStyles.map((style) => <button type="button" key={style} className={selectedStyles.includes(style) ? 'agent-chip selected' : 'agent-chip'} aria-pressed={selectedStyles.includes(style)} onClick={() => toggle(style, selectedStyles, setSelectedStyles)}>{selectedStyles.includes(style) && <Check size={13}/>} {style}</button>)}</div></fieldset>
         <fieldset className="agent-choices"><legend>What are you drawn to?</legend><div>{interests.map((interest) => <button type="button" key={interest} className={selectedInterests.includes(interest) ? 'agent-chip selected' : 'agent-chip'} aria-pressed={selectedInterests.includes(interest)} onClick={() => toggle(interest, selectedInterests, setSelectedInterests)}>{selectedInterests.includes(interest) && <Check size={13}/>} {interest}</button>)}</div></fieldset>
         <label className="agent-field agent-needs"><span>Anything else we should know? <small>Accessibility, must-sees, pace, dietary needs…</small></span><textarea rows={2} maxLength={400} value={needs} onChange={(event) => setNeeds(event.target.value)} placeholder="Help us get the details right"/></label>
-        {error && <p className="agent-error" role="alert">{error}{errorHelpUrl && <> <a href={errorHelpUrl} target="_blank" rel="noopener noreferrer">Open AI Gateway settings</a></>}</p>}
+        {error && <p className="agent-error" role="alert">{error}{errorHelpUrl && <> <a href={errorHelpUrl} target="_blank" rel="noopener noreferrer">View Gemini setup or usage limits</a></>}</p>}
         <button className="agent-submit" type="submit" disabled={loading}>{loading ? <><span className="agent-loader"/> Designing your trip…</> : <><Sparkles size={17}/> Design my vacation <ArrowRight size={17}/></>}</button>
-        <p className="agent-privacy">A considered first draft, shaped around you. You can refine it anytime.</p>
+        <p className="agent-privacy">Powered by Gemini&apos;s free tier; quotas apply. Your preferences are sent to Google, which may use free-tier prompts to improve its products.</p>
       </form>
     </div></section>
 
