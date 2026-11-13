@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, type FormEvent } from 'react'
-import { ArrowDown, ArrowRight, CalendarDays, Check, ChevronRight, Compass, Heart, Hotel, MapPin, Menu, Plane, Sparkles, Utensils, Users, Wallet, X } from 'lucide-react'
+import { ArrowDown, ArrowRight, CalendarDays, CarFront, Check, ChevronRight, Compass, Heart, Hotel, MapPin, Menu, Plane, ShieldCheck, Sparkles, Utensils, Users, Wallet, Wifi, X } from 'lucide-react'
 
 type Photo = { url: string; attribution: string; sourceUrl: string } | null
 type Activity = { time: string; title: string; place: string; details: string; duration: string }
@@ -22,6 +22,11 @@ type Plan = {
 
 const travelStyles = ['Culture', 'Food & wine', 'Nature', 'Adventure', 'Relaxation', 'Family', 'Romantic', 'Luxury']
 const interests = ['Landmarks', 'Local neighborhoods', 'Museums', 'Beaches', 'Markets', 'Nightlife', 'Shopping', 'Outdoor activities']
+const travelExtras = [
+  { name: 'AirHelp', category: 'FLIGHT SUPPORT', description: 'Find support for delayed or cancelled flights.', href: 'https://airhelp.tpk.mx/sBkFfXpv', Icon: ShieldCheck },
+  { name: 'Kiwitaxi', category: 'AIRPORT TRANSFERS', description: 'Arrange a ride to or from your accommodation.', href: 'https://kiwitaxi.tpk.mx/JOOOZCke', Icon: CarFront },
+  { name: 'Airalo', category: 'MOBILE DATA', description: 'Explore eSIM data plans before you travel.', href: 'https://airalo.tpk.mx/fdteoZQE', Icon: Wifi },
+]
 
 function partnerLink(template: string | undefined, fallback: string, query: string) {
   return template ? template.replaceAll('{query}', encodeURIComponent(query)) : fallback
@@ -97,6 +102,7 @@ export function TravelPlanner() {
           <a href="#planner">Trip designer</a>
           <a href="#your-trip">Itinerary</a>
           <a href="#booking">Booking hub</a>
+          <a href="#travel-essentials">Travel extras</a>
         </nav>
         <div className="workspace-header-actions">
           <span className="workspace-status"><span aria-hidden="true" /> AI TRIP DESIGNER</span>
@@ -176,6 +182,11 @@ export function TravelPlanner() {
         <section className="premium-booking" id="booking"><div className="booking-decoration" aria-hidden="true"><Sparkles size={20} /></div><div className="premium-booking-copy"><span>03 / WHEN YOU&apos;RE READY</span><h3>Bring the plan to life.</h3><p>Search Expedia for stays, compare flights, and explore Klook activities for {destination}. Compare details and confirm current prices directly with providers.</p></div><div className="premium-booking-actions"><a href={expediaUrl} target="_blank" rel="sponsored noopener noreferrer"><Hotel size={17} /><span><strong>Search Expedia stays</strong><small>Hotels & places to stay</small></span><ArrowRight size={15} /></a><a href={flightUrl} target="_blank" rel="sponsored noopener noreferrer"><Plane size={17} /><span><strong>Compare flights</strong><small>Routes & fares</small></span><ArrowRight size={15} /></a><a href={klookUrl} target="_blank" rel="sponsored noopener noreferrer"><Compass size={17} /><span><strong>Browse Klook</strong><small>Tours & activities</small></span><ArrowRight size={15} /></a></div><p className="premium-affiliate-note">Some booking links may be affiliate links. Prices, availability and booking terms are controlled by providers.</p></section>
         <p className="premium-disclaimer">AI-generated travel inspiration, not live booking data. Verify opening hours, accessibility, advisories and current costs with official sources.</p>
       </section>}
+      <section className="travel-essentials" id="travel-essentials" aria-labelledby="travel-essentials-heading">
+        <div className="travel-essentials-heading"><div><span className="section-step">04 / TRAVEL EXTRAS</span><h3 id="travel-essentials-heading">The little details, taken care of.</h3><p>Useful options for before and during your trip.</p></div></div>
+        <div className="travel-essentials-grid">{travelExtras.map(({ name, category, description, href, Icon }) => <a className="travel-extra-link" key={name} href={href} target="_blank" rel="sponsored noopener noreferrer" aria-label={`${name}: ${description}`}><span className="travel-extra-icon"><Icon size={18} /></span><span className="travel-extra-copy"><small>{category}</small><strong>{name}</strong><span>{description}</span></span><ArrowRight size={16} /></a>)}</div>
+        <p className="travel-extras-note">Partner links may be affiliate links. Check provider coverage, eligibility, prices and terms before purchase.</p>
+      </section>
 
       {!plan && <section className="workspace-value-row"><article><span>01</span><div><strong>Your pace, not a template</strong><p>Build days around how you like to travel.</p></div></article><article><span>02</span><div><strong>Places worth remembering</strong><p>See the places and the story behind them.</p></div></article><article><span>03</span><div><strong>Plan, then book with confidence</strong><p>Keep recommendations and booking links together.</p></div></article></section>}
       <footer className="workspace-footer"><div className="footer-brand"><span className="brand-mark"><Plane size={16} /></span><span>travel AI</span></div><p>Less searching. More somewhere wonderful.</p><span>© 2026 travel AI</span></footer>
