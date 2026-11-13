@@ -2,6 +2,8 @@
 
 import { useState, type FormEvent } from 'react'
 import { ArrowDown, ArrowRight, CalendarDays, CarFront, Check, ChevronRight, Compass, Heart, Hotel, MapPin, Menu, Plane, ShieldCheck, Sparkles, Utensils, Users, Wallet, Wifi, X } from 'lucide-react'
+import { AccountActions } from '@/components/account-actions'
+import { SubscriptionGate } from '@/components/subscription-gate'
 
 type Photo = { url: string; attribution: string; sourceUrl: string } | null
 type Activity = { time: string; title: string; place: string; details: string; duration: string }
@@ -32,7 +34,15 @@ function partnerLink(template: string | undefined, fallback: string, query: stri
   return template ? template.replaceAll('{query}', encodeURIComponent(query)) : fallback
 }
 
-export function TravelPlanner() {
+type PlannerUser = { name: string; email: string }
+type PlannerProps = {
+  user: PlannerUser | null
+  subscriptionStatus: 'active' | 'inactive' | 'unavailable'
+  canManageBilling: boolean
+}
+
+export function TravelPlanner({ user, subscriptionStatus, canManageBilling }: PlannerProps) {
+  const hasActiveSubscription = subscriptionStatus === 'active'
   const [destination, setDestination] = useState('')
   const [duration, setDuration] = useState('5')
   const [travelers, setTravelers] = useState('2')
@@ -106,6 +116,7 @@ export function TravelPlanner() {
         </nav>
         <div className="workspace-header-actions">
           <span className="workspace-status"><span aria-hidden="true" /> AI TRIP DESIGNER</span>
+          <AccountActions user={user} canManageBilling={canManageBilling} />
           <button className="workspace-mobile-menu" type="button" onClick={() => setMenuOpen(!menuOpen)} aria-label={menuOpen ? 'Close menu' : 'Open menu'} aria-expanded={menuOpen} aria-controls="primary-nav">
             {menuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
@@ -132,6 +143,8 @@ export function TravelPlanner() {
       </section>
 
       <main className="workspace-main" id="planner">
+        {hasActiveSubscription ? (
+          <>
         <div className="workspace-section-title">
           <div><span className="section-step">01 / THE BRIEF</span><h2>Tell us what feels like <em>your kind of trip.</em></h2><p>A few details help your AI travel designer find the right rhythm.</p></div>
           <span className="private-badge"><Check size={13} /> PERSONALIZED</span>
@@ -161,9 +174,13 @@ export function TravelPlanner() {
             <button className="workspace-submit" type="submit" disabled={loading} aria-busy={loading}>{loading ? <><span className="workspace-loader" /> Designing your trip…</> : <>Create my trip <ArrowRight size={17} /></>}</button>
           </div>
         </form>
+          </>
+        ) : (
+          <SubscriptionGate user={user} status={subscriptionStatus} canManageBilling={canManageBilling} />
+        )}
       </main>
 
-      {plan && <section className="workspace-results" id="your-trip" aria-label="Your itinerary">
+      {hasActiveSubscription && plan && <section className="workspace-results" id="your-trip" aria-label="Your itinerary">
         <div className="results-topline"><div><span className="section-step">02 / YOUR ITINERARY</span><span className="live-badge"><span aria-hidden="true" /> PERSONALIZED PLAN</span></div><button className="edit-brief" type="button" onClick={() => document.getElementById('planner')?.scrollIntoView({ behavior: 'smooth' })}>Edit trip brief <ArrowDown size={14} /></button></div>
         <div className="results-overview"><div className="results-overview-text"><p className="results-location"><MapPin size={14} />{destination}<span /> {duration} DAYS <span /> {travelers} TRAVELERS</p><h2>{plan.headline}</h2><p className="results-description">{plan.overview}</p><div className="fit-note"><span><Heart size={17} /></span><div><strong>Why this trip fits</strong><p>{plan.destinationFit}</p></div></div><p className="season-note"><CalendarDays size={15} />{plan.bestTimeNote}</p></div><div className="overview-photo"><img src={plan.days[0]?.photo?.url || '/travel-hero.png'} alt={`${destination} travel inspiration`} /><span>YOUR DESTINATION</span><small>Photo via Wikimedia Commons</small></div></div>
 
@@ -188,7 +205,9 @@ export function TravelPlanner() {
         <p className="travel-extras-note">Partner links may be affiliate links. Check provider coverage, eligibility, prices and terms before purchase.</p>
       </section>
 
-      {!plan && <section className="workspace-value-row"><article><span>01</span><div><strong>Your pace, not a template</strong><p>Build days around how you like to travel.</p></div></article><article><span>02</span><div><strong>Places worth remembering</strong><p>See the places and the story behind them.</p></div></article><article><span>03</span><div><strong>Plan, then book with confidence</strong><p>Keep recommendations and booking links together.</p></div></article></section>}
+      {(!hasActiveSubscription || !plan) && (
+        <section className="workspace-value-row"><article><span>01</span><div><strong>Your pace, not a template</strong><p>Build days around how you like to travel.</p></div></article><article><span>02</span><div><strong>Places worth remembering</strong><p>See the places and the story behind them.</p></div></article><article><span>03</span><div><strong>Plan, then book with confidence</strong><p>Keep recommendations and booking links together.</p></div></article></section>
+      )}
       <footer className="workspace-footer"><div className="footer-brand"><span className="brand-mark"><Plane size={16} /></span><span>travel AI</span></div><p>Less searching. More somewhere wonderful.</p><span>© 2026 travel AI</span></footer>
     </div>
   )

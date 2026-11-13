@@ -2,6 +2,7 @@ import { createGoogle } from '@ai-sdk/google'
 import { generateText, Output } from 'ai'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
+import { requireActiveSubscription } from '@/lib/app-access'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -43,6 +44,9 @@ async function findWikimediaPhoto(query: string) {
 }
 
 export async function POST(request: Request) {
+  const access = await requireActiveSubscription(request)
+  if (!access.ok) return access.response
+
   let input: Record<string, unknown>
   try { input = await request.json() } catch { return NextResponse.json({ error: 'Please submit valid trip preferences.' }, { status: 400 }) }
 
