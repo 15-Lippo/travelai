@@ -2,6 +2,7 @@ import { Analytics } from '@vercel/analytics/next'
 import Script from 'next/script'
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
+import './premium-workspace.css'
 
 export const metadata: Metadata = {
   title: 'travel AI — Your personal AI travel designer',
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   colorScheme: 'light',
-  themeColor: '#f8f5ef',
+  themeColor: '#f7f6f2',
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
