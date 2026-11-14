@@ -3,6 +3,7 @@ import { generateText, Output } from 'ai'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { requireActiveSubscription } from '@/lib/app-access'
+import { resolveLocale } from '@/lib/i18n'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -13,6 +14,7 @@ const activitySchema = z.object({
   place: z.string(),
   details: z.string(),
   duration: z.string(),
+  gettingThere: z.string(),
 })
 
 const daySchema = z.object({
@@ -36,35 +38,45 @@ const excursionSchema = z.object({
   effort: z.string(),
 })
 
-const chunkPlanSchema = (duration: number) =>
+const travelEssentialsSchema = z.object({
+  localTransport: z.string(),
+  paymentAndCurrency: z.string(),
+  connectivity: z.string(),
+  safety: z.string(),
+  accessibility: z.string(),
+  bookAhead: z.array(z.string()).min(2).max(5),
+})
+
+const chunkPlanSchema = (duration: number, isSingleChunk: boolean) =>
   z.object({
     headline: z.string(),
     overview: z.string(),
     destinationFit: z.string(),
     bestTimeNote: z.string(),
     days: z.array(daySchema).length(duration),
-    restaurants: z.array(restaurantSchema).min(2).max(4),
-    excursions: z.array(excursionSchema).min(1).max(2),
+    restaurants: z.array(restaurantSchema).min(isSingleChunk ? 3 : 2).max(4),
+    excursions: z.array(excursionSchema).min(isSingleChunk ? 2 : 1).max(3),
     stayAdvice: z.object({
       area: z.string(),
       reason: z.string(),
       style: z.string(),
     }),
     transportAdvice: z.string(),
+    travelEssentials: travelEssentialsSchema,
     budgetBreakdown: z.array(
       z.object({
         category: z.string(),
         estimate: z.string(),
       }),
-    ).min(2).max(4),
+    ).min(3).max(5),
     budgetNote: z.string(),
   })
 
-type Activity = z.infer<typeof activitySchema>
 type DayPlan = z.infer<typeof daySchema>
 type Restaurant = z.infer<typeof restaurantSchema>
 type Excursion = z.infer<typeof excursionSchema>
 type BudgetBreakdown = { category: string; estimate: string }
+type TravelEssentials = z.infer<typeof travelEssentialsSchema>
 type ChunkPlan = {
   headline: string
   overview: string
@@ -75,6 +87,7 @@ type ChunkPlan = {
   excursions: Excursion[]
   stayAdvice: { area: string; reason: string; style: string }
   transportAdvice: string
+  travelEssentials: TravelEssentials
   budgetBreakdown: BudgetBreakdown[]
   budgetNote: string
 }
@@ -144,7 +157,7 @@ function mergeBudgetBreakdown(items: BudgetBreakdown[]) {
 function dedupeByName<T extends { name?: string }>(items: T[]) {
   const seen = new Set<string>()
   return items.filter((item) => {
-    const key = item.name ?? JSON.stringify(item)
+    const key = (item.name ?? JSON.stringify(item)).trim().toLocaleLowerCase()
     if (seen.has(key)) return false
     seen.add(key)
     return true
@@ -152,24 +165,22 @@ function dedupeByName<T extends { name?: string }>(items: T[]) {
 }
 
 function mergeChunkPlans(chunkPlans: ChunkPlan[]) {
+  const firstChunk = chunkPlans[0]
   const mergedDays = chunkPlans.flatMap((chunk) => chunk.days)
   const mergedRestaurants = chunkPlans.flatMap((chunk) => chunk.restaurants)
   const mergedExcursions = chunkPlans.flatMap((chunk) => chunk.excursions)
 
   return {
-    headline: chunkPlans[0]?.headline ?? 'Custom vacation plan',
+    headline: firstChunk.headline,
     overview: chunkPlans.map((chunk) => chunk.overview).filter(Boolean).join(' '),
-    destinationFit: chunkPlans[0]?.destinationFit ?? 'Designed around your interests and pace.',
-    bestTimeNote: chunkPlans[0]?.bestTimeNote ?? 'Flexible timing works well for this itinerary.',
+    destinationFit: firstChunk.destinationFit,
+    bestTimeNote: firstChunk.bestTimeNote,
     days: mergedDays,
     restaurants: dedupeByName(mergedRestaurants).slice(0, 5),
     excursions: dedupeByName(mergedExcursions).slice(0, 4),
-    stayAdvice: chunkPlans[0]?.stayAdvice ?? {
-      area: 'City center or central neighborhood',
-      reason: 'Convenient access to the best local experiences.',
-      style: 'Balanced and comfortable',
-    },
+    stayAdvice: firstChunk.stayAdvice,
     transportAdvice: chunkPlans.map((chunk) => chunk.transportAdvice).filter(Boolean).join(' '),
+    travelEssentials: firstChunk.travelEssentials,
     budgetBreakdown: mergeBudgetBreakdown(chunkPlans.flatMap((chunk) => chunk.budgetBreakdown)).slice(0, 7),
     budgetNote: chunkPlans.map((chunk) => chunk.budgetNote).filter(Boolean).join(' '),
   }
@@ -185,6 +196,7 @@ async function generateVacationChunk({
   interests,
   dates,
   needs,
+  responseLanguage,
   chunkIndex,
   totalChunks,
 }: {
@@ -197,40 +209,39 @@ async function generateVacationChunk({
   interests: string[]
   dates: string
   needs: string
+  responseLanguage: string
   chunkIndex: number
   totalChunks: number
 }) {
+  const dayStart = chunkIndex * duration + 1
+  const dayEnd = dayStart + duration - 1
   const { output } = await generateText({
     model: google('gemini-3.1-flash-lite'),
     output: Output.object({
-      schema: chunkPlanSchema(duration),
+      schema: chunkPlanSchema(duration, totalChunks === 1),
       name: `vacation_plan_chunk_${chunkIndex + 1}`,
     }),
     temperature: 0.55,
-    maxOutputTokens: 3600,
-    prompt: `
-You are a meticulous independent AI travel planner.
-Create a coherent, high-quality trip for the traveler below.
+    maxOutputTokens: 5000,
+    prompt: `You are a meticulous independent AI travel planner. Create a coherent, high-quality vacation plan in ${responseLanguage}.
 
-Trip details:
+Traveler preferences:
 - Destination: ${destination}
-- Duration (this chunk): ${duration} days
-- Chunk: ${chunkIndex + 1}/${totalChunks}
+- Total trip: ${duration * totalChunks} days. This is chunk ${chunkIndex + 1} of ${totalChunks}, covering trip days ${dayStart}-${dayEnd}.
 - Travelers: ${travelers}
 - Budget: ${budget}
 - Travel styles: ${travelStyles.length ? travelStyles.join(', ') : 'Flexible'}
 - Interests: ${interests.length ? interests.join(', ') : 'Balanced sightseeing'}
 - Dates: ${dates}
-- Special needs: ${needs || 'None'}
+- Additional needs: ${needs || 'None'}
 
-Rules:
-- Return exactly ${duration} days.
-- Each day must have 2-3 realistic activities with title, place, details, and duration.
-- Keep the trip cohesive and locally grounded.
-- Give practical, actionable advice.
-- Be concise but rich in detail.
-- Return valid JSON matching the schema exactly.
-    `,
+Requirements:
+- Return exactly ${duration} days for trip days ${dayStart}-${dayEnd}; do not repeat activities from another chunk.
+- Each day must include 2-3 realistic activities.
+- Every activity must include time, title, place, details, duration, and gettingThere. Include practical approximate transit guidance in gettingThere; do not invent live departure times, exact fares, opening hours, or availability.
+- Keep days geographically sensible and the second chunk a natural continuation of the first.
+- Include practical destination advice and estimates, clearly avoiding claims of live availability.
+- Keep descriptions concise and return an object matching the supplied schema exactly.`,
   })
 
   return output as ChunkPlan
@@ -247,11 +258,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Please submit valid trip preferences.' }, { status: 400 })
   }
 
+  const locale = resolveLocale(input.language === 'it' ? 'it' : 'en')
+  const localized = (english: string, italian: string) => locale === 'it' ? italian : english
+  const responseLanguage = locale === 'it' ? 'Italian' : 'English'
   const destination = typeof input.destination === 'string' ? input.destination.trim().slice(0, 120) : ''
   const requestedDuration = Number(input.duration)
   const allowedDurations = [3, 5, 7, 10, 14]
   const duration = allowedDurations.includes(requestedDuration) ? requestedDuration : 5
-
   const travelers = Math.min(12, Math.max(1, Number(input.travelers) || 2))
   const budget = typeof input.budget === 'string' ? input.budget.slice(0, 40) : 'mid-range'
   const travelStyles = Array.isArray(input.travelStyles)
@@ -264,80 +277,75 @@ export async function POST(request: Request) {
   const needs = typeof input.needs === 'string' ? input.needs.trim().slice(0, 400) : ''
 
   if (!destination) {
-    return NextResponse.json({ error: 'Enter a destination to build your vacation plan.' }, { status: 400 })
+    return NextResponse.json({
+      error: localized('Enter a destination to build your vacation plan.', 'Inserisci una destinazione per creare il tuo itinerario.'),
+    }, { status: 400 })
   }
 
   if (!process.env.GEMINI_API_KEY) {
     return NextResponse.json({
-      error: 'Gemini API key is missing. Add a Google AI Studio key to use the free-tier model.',
+      error: localized(
+        'Gemini API key is missing. Add a Google AI Studio key to use the free-tier model.',
+        'La chiave API di Gemini non è configurata. Aggiungi una chiave Google AI Studio per usare il modello gratuito.',
+      ),
       helpUrl: 'https://aistudio.google.com/apikey',
     }, { status: 503 })
   }
 
   try {
     const google = createGoogle({ apiKey: process.env.GEMINI_API_KEY })
-
-    let chunkSizes: number[] = [duration]
-
-    if (duration === 10) {
-      chunkSizes = [5, 5]
-    } else if (duration === 14) {
-      chunkSizes = [7, 7]
-    }
+    const chunkSizes = duration === 10 ? [5, 5] : duration === 14 ? [7, 7] : [duration]
 
     const chunkPlans = await Promise.all(
-      chunkSizes.map(async (chunkDuration, index) => {
-        return generateVacationChunk({
-          google,
-          destination,
-          duration: chunkDuration,
-          travelers,
-          budget,
-          travelStyles,
-          interests,
-          dates,
-          needs,
-          chunkIndex: index,
-          totalChunks: chunkSizes.length,
-        })
-      }),
+      chunkSizes.map((chunkDuration, index) => generateVacationChunk({
+        google,
+        destination,
+        duration: chunkDuration,
+        travelers,
+        budget,
+        travelStyles,
+        interests,
+        dates,
+        needs,
+        responseLanguage,
+        chunkIndex: index,
+        totalChunks: chunkSizes.length,
+      })),
     )
 
     const output = mergeChunkPlans(chunkPlans)
+    if (output.days.length !== duration) {
+      throw new Error(`Generated ${output.days.length} days; expected ${duration}.`)
+    }
 
-    const photoDays = await Promise.all(
-      output.days.map(async (day) => {
-        const photo = await findWikimediaPhoto(`${day.activities[0]?.place || day.title} ${destination}`)
-        return { ...day, photo }
-      }),
-    )
+    const photoDays = await Promise.all(output.days.map(async (day) => {
+      const photo = await findWikimediaPhoto(`${day.activities[0]?.place || day.title} ${destination}`)
+      return { ...day, photo }
+    }))
 
     return NextResponse.json(
-      {
-        plan: {
-          ...output,
-          days: photoDays,
-        },
-      },
+      { plan: { ...output, days: photoDays } },
       { headers: { 'Cache-Control': 'no-store' } },
     )
   } catch (error) {
-    console.error('[v0] Unable to build vacation plan:', error)
-    const message = error instanceof Error ? error.message : ''
-    const quotaExceeded = /429|RESOURCE_EXHAUSTED|quota|rate limit/i.test(message)
+    const message = error instanceof Error ? error.message : String(error)
+    console.error('[vacation-plan] Generation failed:', message)
+
+    const quotaExceeded = /429|RESOURCE_EXHAUSTED|quota|rate.?limit/i.test(message)
     const invalidKey = /API_KEY_INVALID|API key not valid|unauthenticated|401/i.test(message)
+    const timeout = /timeout|timed out|deadline|FUNCTION_INVOCATION_TIMEOUT/i.test(message)
+    const localizedError = quotaExceeded
+      ? localized('Gemini free-tier quota reached. Please wait before trying again.', 'Hai raggiunto il limite gratuito di Gemini. Attendi prima di riprovare.')
+      : invalidKey
+        ? localized('Gemini rejected the API key. Check your Google AI Studio key and try again.', 'Gemini non ha accettato la chiave API. Controlla la chiave Google AI Studio e riprova.')
+        : timeout
+          ? localized('Trip generation took too long. Please try again; if it persists, check the Vercel function duration limit.', 'La creazione dell’itinerario ha richiesto troppo tempo. Riprova; se il problema persiste, controlla il limite di durata della funzione Vercel.')
+          : localized('Gemini could not complete this vacation plan. Please try again and check the Vercel function logs if it persists.', 'Gemini non è riuscito a creare l’itinerario. Riprova e, se il problema persiste, controlla i log della funzione Vercel.')
 
     return NextResponse.json({
-      error: quotaExceeded
-        ? 'Gemini free-tier quota reached. Please wait before trying again.'
-        : invalidKey
-          ? 'Gemini rejected the API key. Check your Google AI Studio key and try again.'
-          : 'Gemini could not complete this vacation plan. Please try again.',
-      ...(quotaExceeded
-        ? { helpUrl: 'https://ai.google.dev/gemini-api/docs/rate-limits' }
-        : invalidKey
-          ? { helpUrl: 'https://aistudio.google.com/apikey' }
-          : {}),
-    }, { status: quotaExceeded ? 429 : invalidKey ? 401 : 502 })
+      error: localizedError,
+      ...(quotaExceeded ? { helpUrl: 'https://ai.google.dev/gemini-api/docs/rate-limits' } : {}),
+      ...(invalidKey ? { helpUrl: 'https://aistudio.google.com/apikey' } : {}),
+    }, { status: quotaExceeded ? 429 : invalidKey ? 401 : timeout ? 504 : 502 })
   }
 }
