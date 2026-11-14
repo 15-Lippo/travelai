@@ -3,20 +3,25 @@ import 'server-only'
 import { betterAuth } from 'better-auth'
 import { pool } from '@/lib/db'
 
+const appOrigin = process.env.BETTER_AUTH_URL
+  ? new URL(process.env.BETTER_AUTH_URL).origin
+  : process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : process.env.V0_RUNTIME_URL
+        ? new URL(process.env.V0_RUNTIME_URL).origin
+        : undefined
+
 export const auth = betterAuth({
   database: pool,
-  baseURL:
-    process.env.BETTER_AUTH_URL ??
-    (process.env.VERCEL_PROJECT_PRODUCTION_URL
-      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-      : process.env.VERCEL_URL
-        ? `https://${process.env.VERCEL_URL}`
-        : process.env.V0_RUNTIME_URL),
+  baseURL: appOrigin,
   emailAndPassword: {
     enabled: true,
     autoSignIn: true,
   },
   trustedOrigins: [
+    ...(appOrigin ? [appOrigin] : []),
     ...(process.env.NODE_ENV === 'development'
       ? [
           'http://localhost:3000',
