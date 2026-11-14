@@ -3,6 +3,7 @@ import { generateText, Output } from 'ai'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { requireActiveSubscription } from '@/lib/app-access'
+import { resolveLocale } from '@/lib/i18n'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -66,6 +67,9 @@ export async function POST(request: Request) {
   let input: Record<string, unknown>
   try { input = await request.json() } catch { return NextResponse.json({ error: 'Please submit valid trip preferences.' }, { status: 400 }) }
 
+  const locale = resolveLocale(input.language === 'it' ? 'it' : 'en')
+  const localized = (english: string, italian: string) => locale === 'it' ? italian : english
+  const responseLanguage = locale === 'it' ? 'Italian' : 'English'
   const destination = typeof input.destination === 'string' ? input.destination.trim().slice(0, 120) : ''
   const requestedDuration = Number(input.duration)
   const allowedDurations = [3, 5, 7, 10, 14]
@@ -76,10 +80,10 @@ export async function POST(request: Request) {
   const interests = Array.isArray(input.interests) ? input.interests.filter((value): value is string => typeof value === 'string').slice(0, 8).map((value) => value.slice(0, 60)) : []
   const dates = typeof input.dates === 'string' ? input.dates.slice(0, 80) : 'Flexible dates'
   const needs = typeof input.needs === 'string' ? input.needs.trim().slice(0, 400) : ''
-  if (!destination) return NextResponse.json({ error: 'Enter a destination to build your vacation plan.' }, { status: 400 })
+  if (!destination) return NextResponse.json({ error: localized('Enter a destination to build your vacation plan.', 'Inserisci una destinazione per creare il tuo itinerario.') }, { status: 400 })
   if (!process.env.GEMINI_API_KEY) {
     return NextResponse.json({
-      error: 'Gemini API key is missing. Add a Google AI Studio key to use the free-tier model.',
+      error: localized('Gemini API key is missing. Add a Google AI Studio key to use the free-tier model.', 'La chiave API di Gemini non è configurata. Aggiungi una chiave Google AI Studio per usare il modello gratuito.'),
       helpUrl: 'https://aistudio.google.com/apikey',
     }, { status: 503 })
   }
@@ -91,7 +95,7 @@ export async function POST(request: Request) {
       output: Output.object({ schema: planSchema(duration), name: 'personal_vacation_plan' }),
       temperature: 0.55,
       maxOutputTokens: 8192,
-      prompt: `You are a meticulous independent AI travel planner. Create a coherent high-quality vacation for the traveler below. Return exactly ${duration} days. Every day must include 2-3 real, distinctive sights or places with realistic geographic grouping and sensible morning/afternoon/evening rhythm. Name only real places and restaurants you are reasonably confident exist; do not claim live availability or fabricate opening hours, prices, transit timetables, or booking status. Restaurant recommendations must be recognizable real venues only when confident; otherwise make the name explicitly cuisine-and-area based. Explain why each choice fits. Include 3-5 restaurants, 2-4 excursions, practical hotel-area advice, transport, and an estimated per-person budget breakdown appropriate to budget and duration. Clearly label estimates and exclusions. Adapt to travelers, dates, interests, style, budget, accessibility and other needs. Mention reasonable assumptions briefly. For every activity, add gettingThere with practical, approximate advice for reaching that specific place from the previous stop. Do not invent route durations, live transit departures, exact fares, or service availability. State when advice is general and recommend checking a live map or official transit source. For travelEssentials, cover local transport options, payment/currency, connectivity, safety, accessibility, and 2-5 things worth booking ahead. Avoid unsupported destination-specific claims; say what the traveler should verify. Write in polished, warm English.\n\nTraveler preferences: ${JSON.stringify({ destination, durationDays: duration, travelers, budget, travelStyles, interests, dates, additionalNeeds: needs })}`,
+      prompt: `You are a meticulous independent AI travel planner. Create a coherent high-quality vacation for the traveler below. Return exactly ${duration} days. Every day must include 2-3 real, distinctive sights or places with realistic geographic grouping and sensible morning/afternoon/evening rhythm. Name only real places and restaurants you are reasonably confident exist; do not claim live availability or fabricate opening hours, prices, transit timetables, or booking status. Restaurant recommendations must be recognizable real venues only when confident; otherwise make the name explicitly cuisine-and-area based. Explain why each choice fits. Include 3-5 restaurants, 2-4 excursions, practical hotel-area advice, transport, and an estimated per-person budget breakdown appropriate to budget and duration. Clearly label estimates and exclusions. Adapt to travelers, dates, interests, style, budget, accessibility and other needs. Mention reasonable assumptions briefly. For every activity, add gettingThere with practical, approximate advice for reaching that specific place from the previous stop. Do not invent route durations, live transit departures, exact fares, or service availability. State when advice is general and recommend checking a live map or official transit source. For travelEssentials, cover local transport options, payment/currency, connectivity, safety, accessibility, and 2-5 things worth booking ahead. Avoid unsupported destination-specific claims; say what the traveler should verify. Write the complete plan in polished, warm ${responseLanguage}. Preserve proper names of places and venues.\n\nTraveler preferences: ${JSON.stringify({ destination, durationDays: duration, travelers, budget, travelStyles, interests, dates, additionalNeeds: needs })}`,
     })
     const photoDays = await Promise.all(output.days.map(async (day) => {
       const photo = await findWikimediaPhoto(`${day.activities[0]?.place || day.title} ${destination}`)
@@ -105,10 +109,10 @@ export async function POST(request: Request) {
     const invalidKey = /API_KEY_INVALID|API key not valid|unauthenticated|401/i.test(message)
     return NextResponse.json({
       error: quotaExceeded
-        ? 'Gemini free-tier quota reached. Please wait before trying again.'
+        ? localized('Gemini free-tier quota reached. Please wait before trying again.', 'Hai raggiunto il limite gratuito di Gemini. Attendi prima di riprovare.')
         : invalidKey
-          ? 'Gemini rejected the API key. Check your Google AI Studio key and try again.'
-          : 'Gemini could not complete this vacation plan. Please try again.',
+          ? localized('Gemini rejected the API key. Check your Google AI Studio key and try again.', 'Gemini non ha accettato la chiave API. Controlla la chiave Google AI Studio e riprova.')
+          : localized('Gemini could not complete this vacation plan. Please try again.', 'Gemini non è riuscito a creare l’itinerario. Riprova.'),
       ...(quotaExceeded
         ? { helpUrl: 'https://ai.google.dev/gemini-api/docs/rate-limits' }
         : invalidKey
