@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Plane } from 'lucide-react'
 import { authClient } from '@/lib/auth-client'
+import { LanguageSwitcher } from '@/components/language-switcher'
+import { useLocale } from '@/components/locale-provider'
 
 export function AuthForm({
   mode,
@@ -13,6 +15,7 @@ export function AuthForm({
   mode: 'sign-in' | 'sign-up'
   redirectTo: string
 }) {
+  const { t } = useLocale()
   const router = useRouter()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -42,7 +45,7 @@ export function AuthForm({
     try {
       await startTrialCheckout()
     } catch {
-      setError('Your account is ready, but Stripe checkout could not start. Please try again.')
+      setError(t('Your account is ready, but Stripe checkout could not start. Please try again.'))
     } finally {
       setLoading(false)
     }
@@ -61,7 +64,7 @@ export function AuthForm({
         : await authClient.signIn.email({ email, password })
 
       if (result.error) {
-        setError('We could not complete that request. Check your details and try again.')
+        setError(t('We could not complete that request. Check your details and try again.'))
         return
       }
 
@@ -81,8 +84,8 @@ export function AuthForm({
       router.refresh()
     } catch {
       setError(accountJustCreated
-        ? 'Your account is ready, but Stripe checkout could not start. Please try again.'
-        : 'We could not complete that request. Check your connection and try again.')
+        ? t('Your account is ready, but Stripe checkout could not start. Please try again.')
+        : t('We could not complete that request. Check your connection and try again.'))
     } finally {
       setLoading(false)
     }
@@ -91,31 +94,32 @@ export function AuthForm({
   return (
     <main className="auth-page">
       <section className="auth-card" aria-labelledby="auth-title">
-        <Link className="auth-brand" href="/" aria-label="travel AI home">
+        <LanguageSwitcher className="auth-language-switcher" />
+        <Link className="auth-brand" href="/" aria-label={t('travel AI home')}>
           <span className="brand-mark"><Plane size={16} /></span>
           <span>travel<span className="brand-ai">AI</span></span>
         </Link>
-        <p className="auth-eyebrow">YOUR PERSONAL TRAVEL STUDIO</p>
-        <h1 id="auth-title">{isSignUp ? 'Make room for somewhere wonderful.' : 'Welcome back.'}</h1>
+        <p className="auth-eyebrow">{t('YOUR PERSONAL TRAVEL STUDIO')}</p>
+        <h1 id="auth-title">{isSignUp ? t('Make room for somewhere wonderful.') : t('Welcome back.')}</h1>
         <p className="auth-description">
           {isSignUp
-            ? 'Start with two months free from today. Your card is collected securely now, then €9.90 is charged automatically each year.'
-            : 'Sign in to continue planning a trip that feels like yours.'}
+            ? t('Start with two months free from today. Your card is collected securely now, then €9.90 is charged automatically each year.')
+            : t('Sign in to continue planning a trip that feels like yours.')}
         </p>
 
         {accountCreated ? (
           <div className="auth-form">
-            <p>Your account is ready. Complete Stripe checkout to start your free trial.</p>
+            <p>{t('Your account is ready. Complete Stripe checkout to start your free trial.')}</p>
             {error && <p className="auth-error" role="alert">{error}</p>}
             <button className="auth-submit" type="button" onClick={handleCheckoutRetry} disabled={loading} aria-busy={loading}>
-              {loading ? 'Opening Stripe…' : 'Continue to Stripe'}
+              {loading ? t('Opening Stripe…') : t('Continue to Stripe')}
             </button>
           </div>
         ) : (
         <form className="auth-form" onSubmit={handleSubmit} aria-busy={loading}>
           {isSignUp && (
             <label className="auth-field" htmlFor="name">
-              <span>Name</span>
+              <span>{t('Name')}</span>
               <input
                 id="name"
                 name="name"
@@ -129,7 +133,7 @@ export function AuthForm({
             </label>
           )}
           <label className="auth-field" htmlFor="email">
-            <span>Email address</span>
+            <span>{t('Email address')}</span>
             <input
               id="email"
               name="email"
@@ -142,7 +146,7 @@ export function AuthForm({
             />
           </label>
           <label className="auth-field" htmlFor="password">
-            <span>Password</span>
+            <span>{t('Password')}</span>
             <input
               id="password"
               name="password"
@@ -154,24 +158,24 @@ export function AuthForm({
               value={password}
               onChange={(event) => setPassword(event.target.value)}
             />
-            {isSignUp && <small>Use at least 8 characters.</small>}
+            {isSignUp && <small>{t('Use at least 8 characters.')}</small>}
           </label>
 
           {error && <p className="auth-error" role="alert">{error}</p>}
 
           <button className="auth-submit" type="submit" disabled={loading} aria-busy={loading}>
-            {loading ? 'Please wait…' : isSignUp ? 'Create account' : 'Sign in'}
+            {loading ? t('Please wait…') : isSignUp ? t('Create account') : t('Sign in')}
           </button>
         </form>
         )}
 
         <p className="auth-switch">
-          {isSignUp ? 'Already have an account?' : 'New to travel AI?'}{' '}
+          {isSignUp ? t('Already have an account?') : t('New to travel AI?')}{' '}
           <Link href={isSignUp ? '/sign-in' : '/sign-up'}>
-            {isSignUp ? 'Sign in' : 'Create an account'}
+            {isSignUp ? t('Sign in') : t('Create an account')}
           </Link>
         </p>
-        <p className="auth-footnote">Your account is secured with encrypted sessions. Payment details are handled by Stripe.</p>
+        <p className="auth-footnote">{t('Your account is secured with encrypted sessions. Payment details are handled by Stripe.')}</p>
       </section>
     </main>
   )

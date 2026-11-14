@@ -1,8 +1,10 @@
 'use client'
 
 import { useState } from 'react'
+import { useLocale } from '@/components/locale-provider'
 
 export function StripeCheckout() {
+  const { t } = useLocale()
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -17,20 +19,20 @@ export function StripeCheckout() {
       if (!response.ok || typeof result?.url !== 'string') {
         throw new Error(typeof result?.error === 'string'
           ? result.error
-          : 'Checkout could not be started. Please try again.')
+          : t('Checkout could not be started. Please try again.'))
       }
 
       window.location.assign(result.url)
     } catch (checkoutError) {
       setError(checkoutError instanceof Error
         ? checkoutError.message
-        : 'Checkout could not be started. Please try again.')
+        : t('Checkout could not be started. Please try again.'))
       setLoading(false)
     }
   }
 
   return (
-    <div className="stripe-checkout" aria-label="Secure Stripe checkout">
+    <div className="stripe-checkout" aria-label={t('Secure Stripe checkout')}>
       <button
         className="subscription-primary-button"
         type="button"
@@ -38,7 +40,7 @@ export function StripeCheckout() {
         disabled={loading}
         aria-busy={loading}
       >
-        {loading ? 'Opening secure checkout…' : 'Start your 2-month free trial'}
+        {loading ? t('Opening secure checkout…') : t('Start your 2-month free trial')}
       </button>
       {error && <p className="subscription-warning" role="alert">{error}</p>}
     </div>
