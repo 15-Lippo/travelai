@@ -198,6 +198,90 @@
   .travel-extra-link { min-height: 80px; padding: 12px; }
 }
 
+.day-mobility {
+  margin-top: 9px;
+  padding: 10px 11px;
+  border: 1px solid #e9e3da;
+  border-radius: 8px;
+  background: #faf8f3;
+}
+
+.day-mobility p {
+  margin: 0;
+  color: #69747a;
+  font-size: 9px;
+  line-height: 1.65;
+}
+
+.day-mobility p strong {
+  color: #344650;
+}
+
+.day-mobility a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 7px;
+  color: #986222;
+  font-size: 8px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.day-mobility a:hover,
+.day-mobility a:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.travel-practical-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.essential-card {
+  padding: 16px;
+  border: 1px solid #e7e3dc;
+  border-radius: 11px;
+  background: #fffefa;
+}
+
+.essential-card > strong {
+  color: #344650;
+  font-size: 10px;
+}
+
+.essential-card p,
+.essential-card li {
+  color: #737e82;
+  font-size: 9px;
+  line-height: 1.7;
+}
+
+.essential-card ul {
+  display: grid;
+  gap: 5px;
+  margin: 8px 0 0;
+  padding-left: 17px;
+}
+
+.essential-card li::marker {
+  color: #a76d2e;
+}
+
+@media (max-width: 760px) {
+  .travel-practical-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .travel-practical-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .workspace-account-actions { display: flex; align-items: center; gap: 8px; }
 .workspace-account-identity { max-width: 150px; overflow: hidden; color: #707b7e; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
 .workspace-account-link,.workspace-account-button,.workspace-billing-link { display: inline-flex; min-height: 32px; align-items: center; justify-content: center; padding: 0 10px; border: 1px solid #e3dfd7; border-radius: 999px; background: #fffefa; color: #41515a; font-size: 9px; font-weight: 700; text-decoration: none; }
