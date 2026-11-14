@@ -6,7 +6,15 @@ import { AccountActions } from '@/components/account-actions'
 import { SubscriptionGate } from '@/components/subscription-gate'
 
 type Photo = { url: string; attribution: string; sourceUrl: string } | null
-type Activity = { time: string; title: string; place: string; details: string; duration: string }
+type Activity = { time: string; title: string; place: string; details: string; duration: string; gettingThere: string }
+type TravelEssentials = {
+  localTransport: string
+  paymentAndCurrency: string
+  connectivity: string
+  safety: string
+  accessibility: string
+  bookAhead: string[]
+}
 type Day = { title: string; theme: string; activities: Activity[]; photo: Photo }
 type Plan = {
   headline: string
@@ -18,6 +26,7 @@ type Plan = {
   excursions: { name: string; description: string; duration: string; effort: string }[]
   stayAdvice: { area: string; reason: string; style: string }
   transportAdvice: string
+  travelEssentials: TravelEssentials
   budgetBreakdown: { category: string; estimate: string }[]
   budgetNote: string
 }
@@ -32,6 +41,17 @@ const travelExtras = [
 
 function partnerLink(template: string | undefined, fallback: string, query: string) {
   return template ? template.replaceAll('{query}', encodeURIComponent(query)) : fallback
+}
+
+function directionsUrl(origin: string, destination: string) {
+  const params = new URLSearchParams({
+    api: '1',
+    origin,
+    destination,
+    travelmode: 'transit',
+  })
+
+  return `https://www.google.com/maps/dir/?${params.toString()}`
 }
 
 type PlannerUser = { name: string; email: string }
@@ -185,7 +205,34 @@ export function TravelPlanner({ user, subscriptionStatus, canManageBilling }: Pl
         <div className="results-overview"><div className="results-overview-text"><p className="results-location"><MapPin size={14} />{destination}<span /> {duration} DAYS <span /> {travelers} TRAVELERS</p><h2>{plan.headline}</h2><p className="results-description">{plan.overview}</p><div className="fit-note"><span><Heart size={17} /></span><div><strong>Why this trip fits</strong><p>{plan.destinationFit}</p></div></div><p className="season-note"><CalendarDays size={15} />{plan.bestTimeNote}</p></div><div className="overview-photo"><img src={plan.days[0]?.photo?.url || '/travel-hero.png'} alt={`${destination} travel inspiration`} /><span>YOUR DESTINATION</span><small>Photo via Wikimedia Commons</small></div></div>
 
         <div className="results-section-heading"><div><span>THE JOURNEY</span><h3>Days with a sense of place</h3></div><p>Thoughtful pacing, memorable stops, room to wander.</p></div>
-        <div className="premium-day-list">{plan.days.map((day, index) => <article className="premium-day" key={`${index}-${day.title}`}><div className="premium-day-image">{day.photo ? <><img src={day.photo.url} alt={`${day.activities[0]?.place || day.title} in ${destination}`} loading={index < 2 ? 'eager' : 'lazy'} /><a className="premium-photo-credit" href={day.photo.sourceUrl} target="_blank" rel="noopener noreferrer">{day.photo.attribution}</a></> : <div className="premium-photo-fallback"><MapPin size={24} /><span>{destination}</span></div>}<span className="premium-day-count">DAY {String(index + 1).padStart(2, '0')}</span></div><div className="premium-day-body"><div className="premium-day-title"><div><span>{day.theme}</span><h4>{day.title}</h4></div><a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${day.activities[0]?.place}, ${destination}`)}`} target="_blank" rel="noopener noreferrer" aria-label={`View day ${index + 1} on Maps`}><MapPin size={16} /></a></div><div className="premium-timeline">{day.activities.map((activity, i) => <div className="premium-timeline-item" key={`${activity.time}-${i}`}><span className="timeline-time">{activity.time}</span><div><strong>{activity.title}</strong><p className="timeline-place"><MapPin size={12} />{activity.place}<span>· {activity.duration}</span></p><p>{activity.details}</p></div></div>)}</div></div></article>)}</div>
+        <div className="premium-day-list">{plan.days.map((day, index) => <article className="premium-day" key={`${index}-${day.title}`}><div className="premium-day-image">{day.photo ? <><img src={day.photo.url} alt={`${day.activities[0]?.place || day.title} in ${destination}`} loading={index < 2 ? 'eager' : 'lazy'} /><a className="premium-photo-credit" href={day.photo.sourceUrl} target="_blank" rel="noopener noreferrer">{day.photo.attribution}</a></> : <div className="premium-photo-fallback"><MapPin size={24} /><span>{destination}</span></div>}<span className="premium-day-count">DAY {String(index + 1).padStart(2, '0')}</span></div><div className="premium-day-body"><div className="premium-day-title"><div><span>{day.theme}</span><h4>{day.title}</h4></div><a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${day.activities[0]?.place}, ${destination}`)}`} target="_blank" rel="noopener noreferrer" aria-label={`View day ${index + 1} on Maps`}><MapPin size={16} /></a></div><div className="premium-timeline">{day.activities.map((activity, i) => {
+          const origin = i === 0 ? plan.stayAdvice.area : day.activities[i - 1].place
+
+          return (
+            <div className="premium-timeline-item" key={`${activity.time}-${i}`}>
+              <span className="timeline-time">{activity.time}</span>
+              <div>
+                <strong>{activity.title}</strong>
+                <p className="timeline-place">
+                  <MapPin size={12} />
+                  {activity.place}
+                  <span>· {activity.duration}</span>
+                </p>
+                <p>{activity.details}</p>
+                <div className="day-mobility">
+                  <p><strong>Getting there</strong> {activity.gettingThere}</p>
+                  <a
+                    href={directionsUrl(`${origin}, ${destination}`, `${activity.place}, ${destination}`)}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Open route in Google Maps <ArrowRight size={13} />
+                  </a>
+                </div>
+              </div>
+            </div>
+          )
+        })}</div></div></article>)}</div>
 
         <div className="results-section-heading"><div><span>CURATED FOR YOUR TASTE</span><h3>Good tables, local flavor</h3></div><Utensils size={20} /></div>
         <div className="premium-recommendations">{plan.restaurants.map((restaurant, index) => <article className="premium-rec-card" key={`${restaurant.name}-${index}`}><div className="rec-card-top"><span>DINING · 0{index + 1}</span><span>{restaurant.priceLevel}</span></div><h4>{restaurant.name}</h4><p className="rec-detail">{restaurant.cuisine} <i /> {restaurant.area}</p><p>{restaurant.whyItFits}</p><a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${restaurant.name} ${restaurant.area} ${destination}`)}`} target="_blank" rel="noopener noreferrer">View on Maps <ArrowRight size={14} /></a></article>)}</div>
@@ -195,6 +242,46 @@ export function TravelPlanner({ user, subscriptionStatus, canManageBilling }: Pl
 
         <div className="results-section-heading"><div><span>THE DETAILS THAT MAKE IT WORK</span><h3>A little practical magic</h3></div></div>
         <div className="premium-practical"><article><span className="practical-icon"><Hotel size={18} /></span><span className="practical-label">YOUR HOME BASE</span><h4>{plan.stayAdvice.area}</h4><p>{plan.stayAdvice.reason}</p><small>Best for: {plan.stayAdvice.style}</small></article><article><span className="practical-icon"><Plane size={18} /></span><span className="practical-label">GETTING AROUND</span><h4>Move at your own pace</h4><p>{plan.transportAdvice}</p></article><article className="premium-budget"><span className="practical-icon"><Wallet size={18} /></span><span className="practical-label">BUDGET, WITHOUT SURPRISES</span><h4>Estimated trip costs</h4><div>{plan.budgetBreakdown.map((item, index) => <p key={`${item.category}-${index}`}><span>{item.category}</span><strong>{item.estimate}</strong></p>)}</div><small>{plan.budgetNote}</small></article></div>
+
+        <section className="travel-essentials" aria-labelledby="essentials-title">
+          <div className="travel-essentials-heading">
+            <div>
+              <span className="section-step">TRAVEL SMARTER</span>
+              <h3 id="essentials-title">Know before you go</h3>
+              <p>Practical notes to help the trip run smoothly.</p>
+            </div>
+          </div>
+
+          <div className="travel-practical-grid">
+            <article className="essential-card">
+              <strong>Getting around</strong>
+              <p>{plan.travelEssentials.localTransport}</p>
+            </article>
+            <article className="essential-card">
+              <strong>Money &amp; payments</strong>
+              <p>{plan.travelEssentials.paymentAndCurrency}</p>
+            </article>
+            <article className="essential-card">
+              <strong>Connectivity</strong>
+              <p>{plan.travelEssentials.connectivity}</p>
+            </article>
+            <article className="essential-card">
+              <strong>Safety</strong>
+              <p>{plan.travelEssentials.safety}</p>
+            </article>
+            <article className="essential-card">
+              <strong>Accessibility</strong>
+              <p>{plan.travelEssentials.accessibility}</p>
+            </article>
+            <article className="essential-card">
+              <strong>Book ahead</strong>
+              <ul>{plan.travelEssentials.bookAhead.map((item, index) => <li key={`${item}-${index}`}>{item}</li>)}</ul>
+            </article>
+          </div>
+          <p className="travel-extras-note">
+            AI-generated travel guidance is not live transit or safety data. Confirm current details with official local sources.
+          </p>
+        </section>
 
         <section className="premium-booking" id="booking"><div className="booking-decoration" aria-hidden="true"><Sparkles size={20} /></div><div className="premium-booking-copy"><span>03 / WHEN YOU&apos;RE READY</span><h3>Bring the plan to life.</h3><p>Search Expedia for stays, compare flights, and explore Klook activities for {destination}. Compare details and confirm current prices directly with providers.</p></div><div className="premium-booking-actions"><a href={expediaUrl} target="_blank" rel="sponsored noopener noreferrer"><Hotel size={17} /><span><strong>Search Expedia stays</strong><small>Hotels & places to stay</small></span><ArrowRight size={15} /></a><a href={flightUrl} target="_blank" rel="sponsored noopener noreferrer"><Plane size={17} /><span><strong>Compare flights</strong><small>Routes & fares</small></span><ArrowRight size={15} /></a><a href={klookUrl} target="_blank" rel="sponsored noopener noreferrer"><Compass size={17} /><span><strong>Browse Klook</strong><small>Tours & activities</small></span><ArrowRight size={15} /></a></div><p className="premium-affiliate-note">Some booking links may be affiliate links. Prices, availability and booking terms are controlled by providers.</p></section>
         <p className="premium-disclaimer">AI-generated travel inspiration, not live booking data. Verify opening hours, accessibility, advisories and current costs with official sources.</p>
