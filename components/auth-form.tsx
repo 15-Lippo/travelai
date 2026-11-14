@@ -19,12 +19,41 @@ export function AuthForm({
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [accountCreated, setAccountCreated] = useState(false)
   const isSignUp = mode === 'sign-up'
+
+  async function startTrialCheckout() {
+    const response = await fetch('/api/billing/checkout', { method: 'POST' })
+    const result = await response.json().catch(() => null)
+
+    if (!response.ok || typeof result?.url !== 'string') {
+      throw new Error(typeof result?.error === 'string'
+        ? result.error
+        : 'We could not start the secure checkout. Please try again.')
+    }
+
+    window.location.assign(result.url)
+  }
+
+  async function handleCheckoutRetry() {
+    setError('')
+    setLoading(true)
+
+    try {
+      await startTrialCheckout()
+    } catch {
+      setError('Your account is ready, but Stripe checkout could not start. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError('')
     setLoading(true)
+
+    let accountJustCreated = false
 
     try {
       const result = isSignUp
@@ -36,6 +65,13 @@ export function AuthForm({
         return
       }
 
+      if (isSignUp) {
+        accountJustCreated = true
+        setAccountCreated(true)
+        await startTrialCheckout()
+        return
+      }
+
       if (redirectTo.startsWith('/api/')) {
         window.location.assign(redirectTo)
         return
@@ -44,7 +80,9 @@ export function AuthForm({
       router.replace(redirectTo)
       router.refresh()
     } catch {
-      setError('We could not complete that request. Check your connection and try again.')
+      setError(accountJustCreated
+        ? 'Your account is ready, but Stripe checkout could not start. Please try again.'
+        : 'We could not complete that request. Check your connection and try again.')
     } finally {
       setLoading(false)
     }
@@ -61,10 +99,19 @@ export function AuthForm({
         <h1 id="auth-title">{isSignUp ? 'Make room for somewhere wonderful.' : 'Welcome back.'}</h1>
         <p className="auth-description">
           {isSignUp
-            ? 'Create an account to unlock your annual travel-planning membership.'
+            ? 'Start with two months free from today. Your card is collected securely now, then €9.90 is charged automatically each year.'
             : 'Sign in to continue planning a trip that feels like yours.'}
         </p>
 
+        {accountCreated ? (
+          <div className="auth-form">
+            <p>Your account is ready. Complete Stripe checkout to start your free trial.</p>
+            {error && <p className="auth-error" role="alert">{error}</p>}
+            <button className="auth-submit" type="button" onClick={handleCheckoutRetry} disabled={loading} aria-busy={loading}>
+              {loading ? 'Opening Stripe…' : 'Continue to Stripe'}
+            </button>
+          </div>
+        ) : (
         <form className="auth-form" onSubmit={handleSubmit} aria-busy={loading}>
           {isSignUp && (
             <label className="auth-field" htmlFor="name">
@@ -116,6 +163,7 @@ export function AuthForm({
             {loading ? 'Please wait…' : isSignUp ? 'Create account' : 'Sign in'}
           </button>
         </form>
+        )}
 
         <p className="auth-switch">
           {isSignUp ? 'Already have an account?' : 'New to travel AI?'}{' '}

@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { Check, ShieldCheck, Sparkles } from 'lucide-react'
@@ -26,8 +25,6 @@ const annualPrice = new Intl.NumberFormat('en-IE', {
 }).format(ANNUAL_PLAN.priceInCents / 100)
 
 export function SubscriptionGate({ user, status, canManageBilling }: SubscriptionGateProps) {
-  const [checkoutOpen, setCheckoutOpen] = useState(false)
-
   return (
     <section className="subscription-gate" aria-labelledby="subscription-title">
       <div className="subscription-gate-copy">
@@ -46,23 +43,12 @@ export function SubscriptionGate({ user, status, canManageBilling }: Subscriptio
         <span className="subscription-plan-label"><Sparkles aria-hidden="true" /> ANNUAL MEMBERSHIP</span>
         <h3>{ANNUAL_PLAN.name}</h3>
         <p className="subscription-price"><strong>{annualPrice}</strong><span> / year</span></p>
-        <p className="subscription-plan-description">Billed annually in EUR. Cancel anytime in the billing portal.</p>
+        <p className="subscription-plan-description">Two months free from registration, then {annualPrice} per year charged automatically. A card is required to start the trial; cancel anytime before renewal.</p>
 
         {status === 'unavailable' && user ? (
           <p className="subscription-warning" role="alert">We could not verify your plan right now. Please try again shortly.</p>
         ) : user ? (
-          checkoutOpen ? (
-            <div className="subscription-checkout-panel">
-              <StripeCheckout />
-              <button className="subscription-secondary-button" type="button" onClick={() => setCheckoutOpen(false)}>
-                Back to plan details
-              </button>
-            </div>
-          ) : (
-            <button className="subscription-primary-button" type="button" onClick={() => setCheckoutOpen(true)}>
-              Continue to secure checkout
-            </button>
-          )
+          <StripeCheckout />
         ) : (
           <div className="subscription-account-links">
             <Link className="subscription-primary-button" href="/sign-up">Create your account</Link>
