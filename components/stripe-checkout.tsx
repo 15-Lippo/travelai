@@ -1,51 +1,46 @@
 'use client'
 
-import { useCallback, useMemo, useState } from 'react'
-import { EmbeddedCheckout, EmbeddedCheckoutProvider } from '@stripe/react-stripe-js'
-import { loadStripe } from '@stripe/stripe-js'
-
-const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
-const stripePromise = publishableKey ? loadStripe(publishableKey) : Promise.resolve(null)
+import { useState } from 'react'
 
 export function StripeCheckout() {
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  const getClientSecret = useCallback(async () => {
-    const response = await fetch('/api/billing/checkout', {
-      method: 'POST',
-      headers: { 'Idempotency-Key': crypto.randomUUID() },
-    })
-    const result = await response.json().catch(() => null)
+  async function startCheckout() {
+    setLoading(true)
+    setError('')
 
-    if (!response.ok || typeof result?.clientSecret !== 'string') {
-      const message = typeof result?.error === 'string'
-        ? result.error
-        : 'Checkout could not be started. Please try again.'
-      setError(message)
-      throw new Error(message)
+    try {
+      const response = await fetch('/api/billing/checkout', { method: 'POST' })
+      const result = await response.json().catch(() => null)
+
+      if (!response.ok || typeof result?.url !== 'string') {
+        throw new Error(typeof result?.error === 'string'
+          ? result.error
+          : 'Checkout could not be started. Please try again.')
+      }
+
+      window.location.assign(result.url)
+    } catch (checkoutError) {
+      setError(checkoutError instanceof Error
+        ? checkoutError.message
+        : 'Checkout could not be started. Please try again.')
+      setLoading(false)
     }
-
-    return result.clientSecret as string
-  }, [])
-
-  const options = useMemo(() => ({ fetchClientSecret: getClientSecret }), [getClientSecret])
-
-  if (!publishableKey) {
-    return <p className="subscription-warning" role="alert">Secure checkout is not configured yet.</p>
   }
 
   return (
     <div className="stripe-checkout" aria-label="Secure Stripe checkout">
-      {error ? (
-        <div className="subscription-checkout-error" role="alert">
-          <p>{error}</p>
-          <button className="subscription-secondary-button" type="button" onClick={() => setError('')}>Try again</button>
-        </div>
-      ) : (
-        <EmbeddedCheckoutProvider stripe={stripePromise} options={options}>
-          <EmbeddedCheckout />
-        </EmbeddedCheckoutProvider>
-      )}
+      <button
+        className="subscription-primary-button"
+        type="button"
+        onClick={startCheckout}
+        disabled={loading}
+        aria-busy={loading}
+      >
+        {loading ? 'Opening secure checkout…' : 'Start your 2-month free trial'}
+      </button>
+      {error && <p className="subscription-warning" role="alert">{error}</p>}
     </div>
   )
 }

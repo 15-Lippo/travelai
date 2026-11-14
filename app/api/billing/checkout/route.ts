@@ -2,25 +2,30 @@ import { eq } from 'drizzle-orm'
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
-import { subscriptions } from '@/lib/db/schema'
+import { subscriptions, user } from '@/lib/db/schema'
 import { ANNUAL_PLAN } from '@/lib/products'
 import { getSubscriptionAccess } from '@/lib/subscriptions'
 import { stripe } from '@/lib/stripe'
 
 export const runtime = 'nodejs'
 
-const requestIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+function addCalendarMonths(date: Date, months: number) {
+  const result = new Date(date)
+  const dayOfMonth = result.getUTCDate()
+  result.setUTCDate(1)
+  result.setUTCMonth(result.getUTCMonth() + months)
+  const lastDayOfTargetMonth = new Date(
+    Date.UTC(result.getUTCFullYear(), result.getUTCMonth() + 1, 0),
+  ).getUTCDate()
+  result.setUTCDate(Math.min(dayOfMonth, lastDayOfTargetMonth))
+  return result
+}
 
 export async function POST(request: Request) {
   const session = await auth.api.getSession({ headers: request.headers })
 
   if (!session?.user) {
     return NextResponse.json({ error: 'Sign in before starting checkout.' }, { status: 401 })
-  }
-
-  const requestId = request.headers.get('Idempotency-Key')
-  if (!requestId || !requestIdPattern.test(requestId)) {
-    return NextResponse.json({ error: 'Please retry checkout.' }, { status: 400 })
   }
 
   const access = await getSubscriptionAccess(session.user.id)
@@ -31,20 +36,35 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'We could not verify your plan. Please try again.' }, { status: 503 })
   }
 
+  const [account] = await db
+    .select({ createdAt: user.createdAt })
+    .from(user)
+    .where(eq(user.id, session.user.id))
+    .limit(1)
+
+  if (!account) {
+    return NextResponse.json({ error: 'We could not verify your account. Please try again.' }, { status: 404 })
+  }
+
   const [existingSubscription] = await db
     .select({ stripeCustomerId: subscriptions.stripeCustomerId })
     .from(subscriptions)
     .where(eq(subscriptions.userId, session.user.id))
     .limit(1)
 
+  const trialEnd = Math.floor(addCalendarMonths(account.createdAt, 2).getTime() / 1000)
+  const now = Math.floor(Date.now() / 1000)
+  const trialIsAvailable = trialEnd > now
+
   try {
     const origin = new URL(request.url).origin
     const checkoutSession = await stripe.checkout.sessions.create(
       {
-        ui_mode: 'embedded_page',
-        redirect_on_completion: 'always',
-        return_url: `${origin}/api/billing/confirm?session_id={CHECKOUT_SESSION_ID}`,
+        ui_mode: 'hosted_page',
         mode: 'subscription',
+        success_url: `${origin}/api/billing/confirm?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${origin}/?billing=cancelled`,
+        payment_method_collection: 'always',
         client_reference_id: session.user.id,
         ...(existingSubscription
           ? { customer: existingSubscription.stripeCustomerId }
@@ -64,18 +84,24 @@ export async function POST(request: Request) {
           },
         ],
         subscription_data: {
+          ...(trialIsAvailable
+            ? {
+                trial_end: trialEnd,
+                trial_settings: { end_behavior: { missing_payment_method: 'cancel' as const } },
+              }
+            : {}),
           metadata: { userId: session.user.id, productId: ANNUAL_PLAN.id },
         },
         metadata: { userId: session.user.id, productId: ANNUAL_PLAN.id },
       },
-      { idempotencyKey: `checkout-${session.user.id}-${requestId}` },
+      { idempotencyKey: `checkout-${session.user.id}-${account.createdAt.getTime()}` },
     )
 
-    if (!checkoutSession.client_secret) {
+    if (!checkoutSession.url) {
       return NextResponse.json({ error: 'Stripe could not start checkout.' }, { status: 502 })
     }
 
-    return NextResponse.json({ clientSecret: checkoutSession.client_secret })
+    return NextResponse.json({ url: checkoutSession.url })
   } catch (error) {
     console.error('[v0] Could not create Stripe Checkout session:', error)
     return NextResponse.json({ error: 'Checkout is temporarily unavailable. Please try again.' }, { status: 502 })
