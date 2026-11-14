@@ -34,9 +34,62 @@ type Plan = {
 const travelStyles = ['Culture', 'Food & wine', 'Nature', 'Adventure', 'Relaxation', 'Family', 'Romantic', 'Luxury']
 const interests = ['Landmarks', 'Local neighborhoods', 'Museums', 'Beaches', 'Markets', 'Nightlife', 'Shopping', 'Outdoor activities']
 const travelExtras = [
-  { name: 'AirHelp', category: 'FLIGHT SUPPORT', description: 'Find support for delayed or cancelled flights.', href: 'https://airhelp.tpk.mx/sBkFfXpv', Icon: ShieldCheck },
-  { name: 'Kiwitaxi', category: 'AIRPORT TRANSFERS', description: 'Arrange a ride to or from your accommodation.', href: 'https://kiwitaxi.tpk.mx/JOOOZCke', Icon: CarFront },
-  { name: 'Airalo', category: 'MOBILE DATA', description: 'Explore eSIM data plans before you travel.', href: 'https://airalo.tpk.mx/fdteoZQE', Icon: Wifi },
+  {
+    name: 'Klook',
+    category: 'ACTIVITIES & TOURS',
+    description: 'Explore tours and activities for your trip.',
+    href: 'https://klook.tpk.mx/xQgfSFs9',
+    Icon: Compass,
+  },
+  {
+    name: 'KKday',
+    category: 'LOCAL EXPERIENCES',
+    description: 'Discover activities and local experiences.',
+    href: 'https://kkday.tpk.mx/sYRiuHtU',
+    Icon: Compass,
+  },
+  {
+    name: 'Kiwitaxi',
+    category: 'AIRPORT TRANSFERS',
+    description: 'Arrange an airport transfer.',
+    href: 'https://kiwitaxi.tpk.mx/nQonwRuO',
+    Icon: CarFront,
+  },
+  {
+    name: 'GetTransfer',
+    category: 'CITY TRANSFERS',
+    description: 'Explore private transfer options.',
+    href: 'https://gettransfer.tpk.mx/n7JQGjnI',
+    Icon: CarFront,
+  },
+  {
+    name: 'Localrent',
+    category: 'CAR RENTAL',
+    description: 'Explore car rental options at your destination.',
+    href: 'https://localrent.tpk.mx/NAQS6NwU',
+    Icon: CarFront,
+  },
+  {
+    name: 'Airalo',
+    category: 'MOBILE DATA',
+    description: 'Explore eSIM data plans before you travel.',
+    href: 'https://airalo.tpk.mx/S43lKSoo',
+    Icon: Wifi,
+  },
+  {
+    name: 'AirHelp',
+    category: 'FLIGHT SUPPORT',
+    description: 'Find support for delayed or cancelled flights.',
+    href: 'https://airhelp.tpk.mx/crWJPUJD',
+    Icon: ShieldCheck,
+  },
+  {
+    name: 'Aviasales',
+    category: 'FLIGHTS',
+    description: 'Search for flights to your destination.',
+    href: 'https://aviasales.tpk.mx/PG3KT8Gi',
+    Icon: Plane,
+  },
 ]
 
 function partnerLink(template: string | undefined, fallback: string, query: string) {
@@ -117,9 +170,14 @@ export function TravelPlanner({ user, subscriptionStatus, canManageBilling }: Pl
     }
   }
 
-  const expediaUrl = partnerLink(process.env.NEXT_PUBLIC_TP_HOTEL_URL, `https://www.expedia.com/Hotel-Search?destination=${encodeURIComponent(destination)}`, destination)
-  const flightUrl = partnerLink(process.env.NEXT_PUBLIC_TP_FLIGHT_URL, `https://www.google.com/travel/flights?q=${encodeURIComponent(`flights to ${destination}`)}`, destination)
-  const klookUrl = partnerLink(process.env.NEXT_PUBLIC_TP_ACTIVITY_URL, 'https://klook.tpk.mx/qObGvP9b', destination)
+  const expediaUrl = partnerLink(
+    process.env.NEXT_PUBLIC_TP_HOTEL_URL,
+    `https://www.expedia.com/Hotel-Search?destination=${encodeURIComponent(destination)}`,
+    destination,
+  )
+
+  const flightUrl = 'https://aviasales.tpk.mx/PG3KT8Gi'
+  const klookUrl = 'https://klook.tpk.mx/xQgfSFs9'
 
   return (
     <div className="premium-workspace" id="top">
@@ -283,12 +341,59 @@ export function TravelPlanner({ user, subscriptionStatus, canManageBilling }: Pl
           </p>
         </section>
 
-        <section className="premium-booking" id="booking"><div className="booking-decoration" aria-hidden="true"><Sparkles size={20} /></div><div className="premium-booking-copy"><span>03 / WHEN YOU&apos;RE READY</span><h3>Bring the plan to life.</h3><p>Search Expedia for stays, compare flights, and explore Klook activities for {destination}. Compare details and confirm current prices directly with providers.</p></div><div className="premium-booking-actions"><a href={expediaUrl} target="_blank" rel="sponsored noopener noreferrer"><Hotel size={17} /><span><strong>Search Expedia stays</strong><small>Hotels & places to stay</small></span><ArrowRight size={15} /></a><a href={flightUrl} target="_blank" rel="sponsored noopener noreferrer"><Plane size={17} /><span><strong>Compare flights</strong><small>Routes & fares</small></span><ArrowRight size={15} /></a><a href={klookUrl} target="_blank" rel="sponsored noopener noreferrer"><Compass size={17} /><span><strong>Browse Klook</strong><small>Tours & activities</small></span><ArrowRight size={15} /></a></div><p className="premium-affiliate-note">Some booking links may be affiliate links. Prices, availability and booking terms are controlled by providers.</p></section>
+        <section className="premium-booking" id="booking"><div className="booking-decoration" aria-hidden="true"><Sparkles size={20} /></div><div className="premium-booking-copy"><span>03 / WHEN YOU&apos;RE READY</span><h3>Bring the plan to life.</h3><p>Partner links may not prefill this destination. Search for {destination} on the partner site where needed, and confirm current prices directly with providers.</p></div><div className="premium-booking-actions">
+            <a href={expediaUrl} target="_blank" rel="sponsored noopener noreferrer">
+              <Hotel size={17} />
+              <span>
+                <strong>Find a stay</strong>
+                <small>Hotels &amp; places to stay</small>
+              </span>
+              <ArrowRight size={15} />
+            </a>
+
+            <a href={flightUrl} target="_blank" rel="sponsored noopener noreferrer">
+              <Plane size={17} />
+              <span>
+                <strong>Compare flights</strong>
+                <small>Search with Aviasales</small>
+              </span>
+              <ArrowRight size={15} />
+            </a>
+
+            <a href={klookUrl} target="_blank" rel="sponsored noopener noreferrer">
+              <Compass size={17} />
+              <span>
+                <strong>Discover experiences</strong>
+                <small>Activities with Klook</small>
+              </span>
+              <ArrowRight size={15} />
+            </a>
+          </div><p className="premium-affiliate-note">Some booking links may be affiliate links. Prices, availability and booking terms are controlled by providers.</p></section>
         <p className="premium-disclaimer">AI-generated travel inspiration, not live booking data. Verify opening hours, accessibility, advisories and current costs with official sources.</p>
       </section>}
       <section className="travel-essentials" id="travel-essentials" aria-labelledby="travel-essentials-heading">
         <div className="travel-essentials-heading"><div><span className="section-step">04 / TRAVEL EXTRAS</span><h3 id="travel-essentials-heading">The little details, taken care of.</h3><p>Useful options for before and during your trip.</p></div></div>
-        <div className="travel-essentials-grid">{travelExtras.map(({ name, category, description, href, Icon }) => <a className="travel-extra-link" key={name} href={href} target="_blank" rel="sponsored noopener noreferrer" aria-label={`${name}: ${description}`}><span className="travel-extra-icon"><Icon size={18} /></span><span className="travel-extra-copy"><small>{category}</small><strong>{name}</strong><span>{description}</span></span><ArrowRight size={16} /></a>)}</div>
+        <div className="travel-essentials-grid">
+          {travelExtras.map(({ name, category, description, href, Icon }) => (
+            <a
+              className="travel-extra-link"
+              key={name}
+              href={href}
+              target="_blank"
+              rel="sponsored noopener noreferrer"
+            >
+              <span className="travel-extra-icon">
+                <Icon size={18} />
+              </span>
+              <span className="travel-extra-copy">
+                <small>{category}</small>
+                <strong>{name}</strong>
+                <span>{description}</span>
+              </span>
+              <ArrowRight size={15} />
+            </a>
+          ))}
+        </div>
         <p className="travel-extras-note">Partner links may be affiliate links. Check provider coverage, eligibility, prices and terms before purchase.</p>
       </section>
 
