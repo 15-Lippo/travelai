@@ -68,26 +68,57 @@ function mergePlanChunks(chunks: PlanChunk[]): PlanChunk {
 }
 
 async function findWikimediaPhoto(query: string) {
-  try {
-    const params = new URLSearchParams({
-      action: 'query', generator: 'search', gsrsearch: `filetype:bitmap ${query}`, gsrnamespace: '6', gsrwhat: 'text', gsrlimit: '1',
-      prop: 'imageinfo', iiprop: 'url|extmetadata', iiurlwidth: '1200', format: 'json', origin: '*',
-    })
-    const response = await fetch(`https://commons.wikimedia.org/w/api.php?${params}`, {
-      headers: { 'User-Agent': 'TravelAI vacation planner/1.0 (place photo lookup)' },
-      next: { revalidate: 86400 },
-      signal: AbortSignal.timeout(5000),
-    })
-    if (!response.ok) return null
-    const data = await response.json()
-    const page = Object.values(data.query?.pages ?? {})[0] as { title?: string; imageinfo?: { thumburl?: string; url?: string; descriptionurl?: string; extmetadata?: Record<string, { value?: string }> }[] } | undefined
-    const image = page?.imageinfo?.[0]
-    const url = image?.thumburl || image?.url
-    if (!url) return null
-    const artist = image?.extmetadata?.Artist?.value?.replace(/<[^>]*>/g, '').slice(0, 180) || 'Wikimedia Commons contributor'
-    const license = image?.extmetadata?.LicenseShortName?.value?.replace(/<[^>]*>/g, '').slice(0, 80) || 'Wikimedia Commons'
-    return { url, attribution: `${artist} · ${license}`, sourceUrl: image?.descriptionurl || `https://commons.wikimedia.org/wiki/${encodeURIComponent(page?.title || '')}` }
-  } catch { return null }
+  const searchQueries = [query, `${query} landmark`, `${query} city`]
+
+  for (const searchQuery of searchQueries) {
+    try {
+      const params = new URLSearchParams({
+        action: 'query', generator: 'search', gsrsearch: `filetype:bitmap ${searchQuery}`, gsrnamespace: '6', gsrwhat: 'text', gsrlimit: '5',
+        prop: 'imageinfo', iiprop: 'url|extmetadata', iiurlwidth: '1200', format: 'json', origin: '*',
+      })
+      const response = await fetch(`https://commons.wikimedia.org/w/api.php?${params}`, {
+        headers: { 'User-Agent': 'TravelAI vacation planner/1.0 (place photo lookup)' },
+        next: { revalidate: 86400 },
+        signal: AbortSignal.timeout(2500),
+      })
+      if (!response.ok) continue
+
+      const data = await response.json()
+      const pages = Object.values(data?.query?.pages ?? {}) as Array<{
+        title?: string
+        imageinfo?: Array<{
+          thumburl?: string
+          url?: string
+          descriptionurl?: string
+          extmetadata?: Record<string, { value?: string }>
+        }>
+      }>
+
+      for (const page of pages) {
+        const image = page?.imageinfo?.[0]
+        const candidateUrl = image?.thumburl || image?.url
+        if (!candidateUrl) continue
+
+        const normalizedUrl = candidateUrl.startsWith('//') ? `https:${candidateUrl}` : candidateUrl
+        let parsedUrl: URL
+        try { parsedUrl = new URL(normalizedUrl) } catch { continue }
+        if (!['http:', 'https:'].includes(parsedUrl.protocol) || parsedUrl.pathname.toLowerCase().endsWith('.svg')) continue
+
+        const artist = image?.extmetadata?.Artist?.value?.replace(/<[^>]*>/g, '').slice(0, 180) || 'Wikimedia Commons contributor'
+        const license = image?.extmetadata?.LicenseShortName?.value?.replace(/<[^>]*>/g, '').slice(0, 80) || 'Wikimedia Commons'
+        const sourceUrl = image?.descriptionurl
+        return {
+          url: parsedUrl.href,
+          attribution: `${artist} · ${license}`,
+          sourceUrl: sourceUrl?.startsWith('https://') ? sourceUrl : `https://commons.wikimedia.org/wiki/${encodeURIComponent(page?.title || '')}`,
+        }
+      }
+    } catch {
+      continue
+    }
+  }
+
+  return null
 }
 
 export async function POST(request: Request) {
