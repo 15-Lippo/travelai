@@ -39,6 +39,34 @@ const planSchema = (duration: number) => z.object({
   budgetNote: z.string(),
 })
 
+type PlanChunk = z.infer<ReturnType<typeof planSchema>>
+
+function mergePlanChunks(chunks: PlanChunk[]): PlanChunk {
+  const first = chunks[0]
+  const dedupeByName = <T extends { name: string }>(items: T[]) => {
+    const seen = new Set<string>()
+    return items.filter((item) => {
+      const key = item.name.trim().toLowerCase()
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
+    })
+  }
+  const budgetByCategory = new Map<string, { category: string; estimate: string }>()
+  for (const item of chunks.flatMap((chunk) => chunk.budgetBreakdown)) {
+    const key = item.category.trim().toLowerCase()
+    if (key) budgetByCategory.set(key, item)
+  }
+
+  return {
+    ...first,
+    days: chunks.flatMap((chunk) => chunk.days),
+    restaurants: dedupeByName(chunks.flatMap((chunk) => chunk.restaurants)).slice(0, 5),
+    excursions: dedupeByName(chunks.flatMap((chunk) => chunk.excursions)).slice(0, 4),
+    budgetBreakdown: Array.from(budgetByCategory.values()).slice(0, 7),
+  }
+}
+
 async function findWikimediaPhoto(query: string) {
   try {
     const params = new URLSearchParams({
@@ -46,7 +74,9 @@ async function findWikimediaPhoto(query: string) {
       prop: 'imageinfo', iiprop: 'url|extmetadata', iiurlwidth: '1200', format: 'json', origin: '*',
     })
     const response = await fetch(`https://commons.wikimedia.org/w/api.php?${params}`, {
-      headers: { 'User-Agent': 'TravelAI vacation planner/1.0 (place photo lookup)' }, next: { revalidate: 86400 },
+      headers: { 'User-Agent': 'TravelAI vacation planner/1.0 (place photo lookup)' },
+      next: { revalidate: 86400 },
+      signal: AbortSignal.timeout(5000),
     })
     if (!response.ok) return null
     const data = await response.json()
@@ -90,13 +120,22 @@ export async function POST(request: Request) {
 
   try {
     const google = createGoogle({ apiKey: process.env.GEMINI_API_KEY })
-    const { output } = await generateText({
-      model: google('gemini-3.1-flash-lite'),
-      output: Output.object({ schema: planSchema(duration), name: 'personal_vacation_plan' }),
-      temperature: 0.55,
-      maxOutputTokens: duration >= 10 ? 16384 : 8192,
-      prompt: `You are a meticulous independent AI travel planner. Create a coherent high-quality vacation for the traveler below. Return exactly ${duration} days. Every day must include 2-3 real, distinctive sights or places with realistic geographic grouping and sensible morning/afternoon/evening rhythm. For trips of 10 days or more, keep each activity concise while still making the itinerary complete and distinct across every day. Name only real places and restaurants you are reasonably confident exist; do not claim live availability or fabricate opening hours, prices, transit timetables, or booking status. Restaurant recommendations must be recognizable real venues only when confident; otherwise make the name explicitly cuisine-and-area based. Explain why each choice fits. Include 3-5 restaurants, 2-4 excursions, practical hotel-area advice, transport, and an estimated per-person budget breakdown appropriate to budget and duration. Clearly label estimates and exclusions. Adapt to travelers, dates, interests, style, budget, accessibility and other needs. Mention reasonable assumptions briefly. For every activity, add gettingThere with practical, approximate advice for reaching that specific place from the previous stop. Do not invent route durations, live transit departures, exact fares, or service availability. State when advice is general and recommend checking a live map or official transit source. For travelEssentials, cover local transport options, payment/currency, connectivity, safety, accessibility, and 2-5 things worth booking ahead. Avoid unsupported destination-specific claims; say what the traveler should verify. Write the complete plan in polished, warm ${responseLanguage}. Preserve proper names of places and venues.\n\nTraveler preferences: ${JSON.stringify({ destination, durationDays: duration, travelers, budget, travelStyles, interests, dates, additionalNeeds: needs })}`,
-    })
+    const chunkSizes = duration >= 10
+      ? Array.from({ length: Math.ceil(duration / 5) }, (_, index) => Math.min(5, duration - index * 5))
+      : [duration]
+    const planChunks = await Promise.all(chunkSizes.map(async (chunkDuration, chunkIndex) => {
+      const firstDay = chunkIndex * 5 + 1
+      const lastDay = firstDay + chunkDuration - 1
+      const { output } = await generateText({
+        model: google('gemini-3.1-flash-lite'),
+        output: Output.object({ schema: planSchema(chunkDuration), name: `vacation_plan_chunk_${chunkIndex + 1}` }),
+        temperature: 0.55,
+        maxOutputTokens: chunkDuration >= 5 ? 6144 : 8192,
+        prompt: `You are a meticulous independent AI travel planner. Create a coherent high-quality vacation for the traveler below. This request covers days ${firstDay}-${lastDay} of a ${duration}-day trip. Return exactly ${chunkDuration} itinerary days, in order, with 2-3 real, distinctive activities per day and sensible geographic grouping. Keep activity descriptions concise but useful, and make this segment feel like a continuation of the full trip rather than a separate vacation. All general advice, restaurants, excursions and the budget must be appropriate to the complete ${duration}-day trip. Name only real places and restaurants you are reasonably confident exist; do not claim live availability or fabricate opening hours, prices, transit timetables, or booking status. Restaurant recommendations must be recognizable real venues only when confident; otherwise make the name explicitly cuisine-and-area based. Explain why each choice fits. Include practical hotel-area advice, transport, and an estimated per-person budget appropriate to budget and the complete trip duration. Clearly label estimates and exclusions. Adapt to travelers, dates, interests, style, budget, accessibility and other needs. Mention reasonable assumptions briefly. For every activity, add gettingThere with practical, approximate advice for reaching that specific place from the previous stop. Do not invent route durations, live transit departures, exact fares, or service availability. State when advice is general and recommend checking a live map or official transit source. For travelEssentials, cover local transport options, payment/currency, connectivity, safety, accessibility, and 2-5 things worth booking ahead. Avoid unsupported destination-specific claims; say what the traveler should verify. Write the complete plan in polished, warm ${responseLanguage}. Preserve proper names of places and venues.\n\nTraveler preferences: ${JSON.stringify({ destination, durationDays: duration, travelers, budget, travelStyles, interests, dates, additionalNeeds: needs })}`,
+      })
+      return output as PlanChunk
+    }))
+    const output = mergePlanChunks(planChunks)
     const photoDays = await Promise.all(output.days.map(async (day) => {
       const photo = await findWikimediaPhoto(`${day.activities[0]?.place || day.title} ${destination}`)
       return { ...day, photo }
