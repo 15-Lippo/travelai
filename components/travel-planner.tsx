@@ -242,7 +242,7 @@ export function TravelPlanner({ user, subscriptionStatus, canManageBilling }: Pl
           </div>
           <div className="workspace-fields-grid">
             <label className="premium-field"><span><CalendarDays size={14} /> {t('Travel dates')}</span><input type="text" value={dates} onChange={(event) => setDates(event.target.value)} placeholder={t('Exact dates or flexible')} /></label>
-            <label className="premium-field"><span><Compass size={14} /> {t('Trip length')}</span><select value={duration} onChange={(event) => setDuration(event.target.value)}>{[3, 5, 7, 10, 14].map((days) => <option key={days} value={days}>{days} {t('days')}</option>)}</select></label>
+            <label className="premium-field"><span><Compass size={14} /> {t('Trip length')}</span><select value={duration} onChange={(event) => setDuration(event.target.value)}>{[3, 5, 7, 10, 14, 15].map((days) => <option key={days} value={days}>{days} {t('days')}</option>)}</select></label>
             <label className="premium-field"><span><Users size={14} /> {t('Travelers')}</span><select value={travelers} onChange={(event) => setTravelers(event.target.value)}>{[1, 2, 3, 4, 5, 6, 8, 10, 12].map((count) => <option key={count} value={count}>{count} {t(count === 1 ? 'traveler' : 'travelers')}</option>)}</select></label>
             <label className="premium-field"><span><Wallet size={14} /> {t('Travel budget')}</span><select value={budget} onChange={(event) => setBudget(event.target.value)}><option value="budget">{t('Value conscious')}</option><option value="mid-range">{t('Comfortable')}</option><option value="premium">{t('Premium')}</option><option value="luxury">{t('Luxury')}</option></select></label>
           </div>
