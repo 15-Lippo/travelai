@@ -167,10 +167,14 @@ export async function POST(request: Request) {
       return output as PlanChunk
     }))
     const output = mergePlanChunks(planChunks)
-    const photoDays = await Promise.all(output.days.map(async (day) => {
+    const searchedPhotoDays = await Promise.all(output.days.map(async (day) => {
       const photo = await findWikimediaPhoto(`${day.activities[0]?.place || day.title} ${destination}`)
       return { ...day, photo }
     }))
+    const destinationPhoto = searchedPhotoDays.some((day) => !day.photo)
+      ? await findWikimediaPhoto(destination)
+      : null
+    const photoDays = searchedPhotoDays.map((day) => ({ ...day, photo: day.photo || destinationPhoto }))
     return NextResponse.json({ plan: { ...output, days: photoDays } }, { headers: { 'Cache-Control': 'no-store' } })
   } catch (error) {
     console.error('[v0] Unable to build vacation plan:', error)
