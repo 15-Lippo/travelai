@@ -136,6 +136,16 @@ export function TravelPlanner({ user, subscriptionStatus, canManageBilling }: Pl
   const toggle = (value: string, list: string[], setter: (next: string[]) => void) =>
     setter(list.includes(value) ? list.filter((item) => item !== value) : [...list, value])
 
+  const clearDayPhoto = (dayIndex: number) => {
+    setPlan((current) => {
+      if (!current) return current
+      return {
+        ...current,
+        days: current.days.map((day, index) => index === dayIndex ? { ...day, photo: null } : day),
+      }
+    })
+  }
+
   async function createPlan(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!destination.trim()) {
@@ -264,10 +274,10 @@ export function TravelPlanner({ user, subscriptionStatus, canManageBilling }: Pl
 
       {hasActiveSubscription && plan && <section className="workspace-results" id="your-trip" aria-label={t('Your itinerary')}>
         <div className="results-topline"><div><span className="section-step">{t('02 / YOUR ITINERARY')}</span><span className="live-badge"><span aria-hidden="true" /> {t('PERSONALIZED PLAN')}</span></div><button className="edit-brief" type="button" onClick={() => document.getElementById('planner')?.scrollIntoView({ behavior: 'smooth' })}>{t('Edit trip brief')} <ArrowDown size={14} /></button></div>
-        <div className="results-overview"><div className="results-overview-text"><p className="results-location"><MapPin size={14} />{destination}<span /> {duration} {t('DAYS')} <span /> {travelers} {t('TRAVELERS')}</p><h2>{plan.headline}</h2><p className="results-description">{plan.overview}</p><div className="fit-note"><span><Heart size={17} /></span><div><strong>{t('Why this trip fits')}</strong><p>{plan.destinationFit}</p></div></div><p className="season-note"><CalendarDays size={15} />{plan.bestTimeNote}</p></div><div className="overview-photo"><img src={plan.days[0]?.photo?.url || '/travel-hero.png'} alt={`${destination} travel inspiration`} /><span>{t('YOUR DESTINATION')}</span><small>{t('Photo via Wikimedia Commons')}</small></div></div>
+        <div className="results-overview"><div className="results-overview-text"><p className="results-location"><MapPin size={14} />{destination}<span /> {duration} {t('DAYS')} <span /> {travelers} {t('TRAVELERS')}</p><h2>{plan.headline}</h2><p className="results-description">{plan.overview}</p><div className="fit-note"><span><Heart size={17} /></span><div><strong>{t('Why this trip fits')}</strong><p>{plan.destinationFit}</p></div></div><p className="season-note"><CalendarDays size={15} />{plan.bestTimeNote}</p></div><div className="overview-photo"><img src={plan.days[0]?.photo?.url || '/travel-hero.png'} alt={`${destination} travel inspiration`} onError={() => clearDayPhoto(0)} /><span>{t('YOUR DESTINATION')}</span><small>{t('Photo via Wikimedia Commons')}</small></div></div>
 
         <div className="results-section-heading"><div><span>{t('THE JOURNEY')}</span><h3>{t('Days with a sense of place')}</h3></div><p>{t('Thoughtful pacing, memorable stops, room to wander.')}</p></div>
-        <div className="premium-day-list">{plan.days.map((day, index) => <article className="premium-day" key={`${index}-${day.title}`}><div className="premium-day-image">{day.photo ? <><img src={day.photo.url} alt={`${day.activities[0]?.place || day.title} in ${destination}`} loading={index < 2 ? 'eager' : 'lazy'} /><a className="premium-photo-credit" href={day.photo.sourceUrl} target="_blank" rel="noopener noreferrer">{day.photo.attribution}</a></> : <div className="premium-photo-fallback"><MapPin size={24} /><span>{destination}</span></div>}<span className="premium-day-count">{t('DAY {day}', { day: String(index + 1).padStart(2, '0') })}</span></div><div className="premium-day-body"><div className="premium-day-title"><div><span>{day.theme}</span><h4>{day.title}</h4></div><a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${day.activities[0]?.place}, ${destination}`)}`} target="_blank" rel="noopener noreferrer" aria-label={t('View day {day} on Maps', { day: index + 1 })}><MapPin size={16} /></a></div><div className="premium-timeline">{day.activities.map((activity, i) => {
+        <div className="premium-day-list">{plan.days.map((day, index) => <article className="premium-day" key={`${index}-${day.title}`}><div className="premium-day-image">{day.photo ? <><img src={day.photo.url} alt={`${day.activities[0]?.place || day.title} in ${destination}`} loading={index < 2 ? 'eager' : 'lazy'} onError={() => clearDayPhoto(index)} /><a className="premium-photo-credit" href={day.photo.sourceUrl} target="_blank" rel="noopener noreferrer">{day.photo.attribution}</a></> : <div className="premium-photo-fallback"><MapPin size={24} /><span>{destination}</span></div>}<span className="premium-day-count">{t('DAY {day}', { day: String(index + 1).padStart(2, '0') })}</span></div><div className="premium-day-body"><div className="premium-day-title"><div><span>{day.theme}</span><h4>{day.title}</h4></div><a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${day.activities[0]?.place}, ${destination}`)}`} target="_blank" rel="noopener noreferrer" aria-label={t('View day {day} on Maps', { day: index + 1 })}><MapPin size={16} /></a></div><div className="premium-timeline">{day.activities.map((activity, i) => {
           const origin = i === 0 ? plan.stayAdvice.area : day.activities[i - 1].place
 
           return (
