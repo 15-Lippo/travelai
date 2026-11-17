@@ -103,7 +103,7 @@ export function AuthForm({
         <h1 id="auth-title">{isSignUp ? t('Make room for somewhere wonderful.') : t('Welcome back.')}</h1>
         <p className="auth-description">
           {isSignUp
-            ? t('Start with two months free from today. Your card is collected securely now, then €9.90 is charged automatically each year.')
+            ? t('Start with two months free from today. No card is needed to begin your trial. Add a payment method before it ends to continue at €9.90 per year; otherwise, the subscription ends.')
             : t('Sign in to continue planning a trip that feels like yours.')}
         </p>
 

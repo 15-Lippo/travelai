@@ -64,7 +64,7 @@ export async function POST(request: Request) {
         mode: 'subscription',
         success_url: `${origin}/api/billing/confirm?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${origin}/?billing=cancelled`,
-        payment_method_collection: 'always',
+        payment_method_collection: 'if_required',
         client_reference_id: session.user.id,
         ...(existingSubscription
           ? { customer: existingSubscription.stripeCustomerId }
