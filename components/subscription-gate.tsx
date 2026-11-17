@@ -50,7 +50,7 @@ export function SubscriptionGate({ user, status, canManageBilling }: Subscriptio
         <span className="subscription-plan-label"><Sparkles aria-hidden="true" /> {t('ANNUAL MEMBERSHIP')}</span>
         <h3>{ANNUAL_PLAN.name}</h3>
         <p className="subscription-price"><strong>{annualPrice}</strong><span>{t(' / year')}</span></p>
-        <p className="subscription-plan-description">{t('Two months free from registration, then {price} per year charged automatically. A card is required to start the trial; cancel anytime before renewal.', { price: annualPrice })}</p>
+        <p className="subscription-plan-description">{t('Two months free from registration. No card is needed to start the trial. Add a payment method before it ends to continue at {price} per year; otherwise, the subscription ends.', { price: annualPrice })}</p>
 
         {status === 'unavailable' && user ? (
           <p className="subscription-warning" role="alert">{t('We could not verify your plan right now. Please try again shortly.')}</p>
