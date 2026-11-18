@@ -27,7 +27,7 @@ function CheckoutLoading() {
 
 export function SubscriptionGate({ user, status, canManageBilling }: SubscriptionGateProps) {
   const { locale, t } = useLocale()
-  const annualPrice = new Intl.NumberFormat(locale === 'it' ? 'it-IT' : 'en-IE', {
+  const annualPrice = new Intl.NumberFormat(locale, {
     style: 'currency',
     currency: ANNUAL_PLAN.currency.toUpperCase(),
   }).format(ANNUAL_PLAN.priceInCents / 100)

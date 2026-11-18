@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useCallback, useContext, useMemo, useEffect, useState, type ReactNode } from 'react'
-import { resolveLocale, translate, type Locale } from '@/lib/i18n'
+import { supportedLocales, translate, type Locale } from '@/lib/i18n'
 
 type LocaleContextValue = {
   locale: Locale
@@ -19,6 +19,7 @@ export function LocaleProvider({ initialLocale, children }: { initialLocale: Loc
   const setLocale = useCallback((nextLocale: Locale) => {
     setLocaleState(nextLocale)
     document.documentElement.lang = nextLocale
+    document.documentElement.dir = nextLocale === 'ar' ? 'rtl' : 'ltr'
 
     try {
       window.localStorage.setItem(STORAGE_KEY, nextLocale)
@@ -34,8 +35,10 @@ export function LocaleProvider({ initialLocale, children }: { initialLocale: Loc
       storedLocale = window.localStorage.getItem(STORAGE_KEY)
     } catch {}
 
-    const browserLocale = resolveLocale(window.navigator.language)
-    setLocale(storedLocale === 'en' || storedLocale === 'it' ? storedLocale : browserLocale)
+    const preferredLocale = storedLocale && supportedLocales.includes(storedLocale as Locale)
+      ? storedLocale as Locale
+      : initialLocale
+    setLocale(preferredLocale)
   }, [setLocale])
 
   const value = useMemo<LocaleContextValue>(() => ({

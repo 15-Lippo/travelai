@@ -1,6 +1,7 @@
 'use client'
 
 import { useLocale } from '@/components/locale-provider'
+import { localeNames, supportedLocales, type Locale } from '@/lib/i18n'
 
 export function LanguageSwitcher({ className = '' }: { className?: string }) {
   const { locale, setLocale, t } = useLocale()
@@ -11,10 +12,11 @@ export function LanguageSwitcher({ className = '' }: { className?: string }) {
       <select
         aria-label={t('Choose language')}
         value={locale}
-        onChange={(event) => setLocale(event.target.value as 'en' | 'it')}
+        onChange={(event) => setLocale(event.target.value as Locale)}
       >
-        <option value="en">EN</option>
-        <option value="it">IT</option>
+        {supportedLocales.map((language) => (
+          <option key={language} value={language}>{localeNames[language]}</option>
+        ))}
       </select>
     </label>
   )

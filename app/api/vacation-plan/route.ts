@@ -3,7 +3,7 @@ import { generateText, Output } from 'ai'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { requireActiveSubscription } from '@/lib/app-access'
-import { resolveLocale } from '@/lib/i18n'
+import { resolveLocale, translate, type Locale } from '@/lib/i18n'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -128,9 +128,12 @@ export async function POST(request: Request) {
   let input: Record<string, unknown>
   try { input = await request.json() } catch { return NextResponse.json({ error: 'Please submit valid trip preferences.' }, { status: 400 }) }
 
-  const locale = resolveLocale(input.language === 'it' ? 'it' : 'en')
-  const localized = (english: string, italian: string) => locale === 'it' ? italian : english
-  const responseLanguage = locale === 'it' ? 'Italian' : 'English'
+  const locale = resolveLocale(typeof input.language === 'string' ? input.language : 'en')
+  const localized = (english: string, italian: string) => locale === 'it' ? italian : locale === 'en' ? english : translate(locale, english)
+  const responseLanguage = ({
+    en: 'English', it: 'Italian', es: 'Spanish', fr: 'French', de: 'German',
+    pt: 'Portuguese', zh: 'Simplified Chinese', ja: 'Japanese', ar: 'Arabic',
+  } satisfies Record<Locale, string>)[locale]
   const destination = typeof input.destination === 'string' ? input.destination.trim().slice(0, 120) : ''
   const requestedDuration = Number(input.duration)
   const allowedDurations = [3, 5, 7, 10, 14, 15]
