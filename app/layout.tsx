@@ -25,7 +25,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   )
 
   return (
-    <html lang={initialLocale}>
+    <html lang={initialLocale} dir={initialLocale === 'ar' ? 'rtl' : 'ltr'}>
       <body className="antialiased">
         <LocaleProvider initialLocale={initialLocale}>{children}</LocaleProvider>
         <Script id="travelpayouts-loader" src="https://tp-em.com/NTk5NzE5.js?t=599719" strategy="afterInteractive" data-cmp-ab="2" />

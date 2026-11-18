@@ -352,6 +352,11 @@
 .billing-complete-card .auth-eyebrow { margin-top: 17px; }
 .billing-complete-link { margin-top: 22px; }
 
+html[dir="rtl"] .premium-workspace,
+html[dir="rtl"] .auth-page { direction: rtl; }
+html[dir="rtl"] .premium-field input,
+html[dir="rtl"] .premium-field textarea { text-align: right; }
+
 @media (max-width: 760px) {
   .subscription-gate { grid-template-columns: 1fr; }
 }
