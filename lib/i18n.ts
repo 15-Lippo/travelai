@@ -118,7 +118,7 @@ const italianMessages: Record<string, string> = {
   'AI-generated travel guidance is not live transit or safety data. Confirm current details with official local sources.': 'I consigli generati dall’AI non sono dati aggiornati su trasporti o sicurezza. Verifica le informazioni con le fonti ufficiali locali.',
   "03 / WHEN YOU'RE READY": '03 / QUANDO VUOI PARTIRE',
   'Bring the plan to life.': 'Dai vita al tuo viaggio.',
-  'Partner links may not prefill this destination. Search for {destination} on the partner site where needed, and confirm current prices directly with providers.': 'I link dei partner potrebbero non includere la destinazione. Se necessario, cerca {destination} sul sito del partner e verifica i prezzi aggiornati direttamente con il fornitore.',
+  'Partner searches are prefilled for {destination}. Transfer and flight providers may also ask for a pickup city, dates, or route details.': 'Le ricerche dei partner sono preimpostate su {destination}. I servizi di transfer e volo potrebbero chiedere anche una città di partenza, le date o i dettagli della tratta.',
   'Find a stay': 'Trova un alloggio',
   'Hotels & places to stay': 'Hotel e alloggi',
   'Compare flights': 'Confronta i voli',
