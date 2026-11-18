@@ -35,67 +35,92 @@ type Plan = {
 
 const travelStyles = ['Culture', 'Food & wine', 'Nature', 'Adventure', 'Relaxation', 'Family', 'Romantic', 'Luxury']
 const interests = ['Landmarks', 'Local neighborhoods', 'Museums', 'Beaches', 'Markets', 'Nightlife', 'Shopping', 'Outdoor activities']
+function affiliateSearchUrl(campaignId: string, partnerId: string, targetUrl: string) {
+  const params = new URLSearchParams({
+    campaign_id: campaignId,
+    marker: '803017',
+    p: partnerId,
+    trs: '599719',
+    u: targetUrl,
+  })
+
+  return `https://tp.media/r?${params.toString()}`
+}
+
+function destinationSearchUrl(baseUrl: string, queryName: string, destination: string) {
+  const url = new URL(baseUrl)
+  const normalizedDestination = destination.trim()
+
+  if (normalizedDestination) {
+    url.searchParams.set(queryName, normalizedDestination)
+  }
+
+  return url.toString()
+}
+
 const travelExtras = [
   {
     name: 'Klook',
     category: 'ACTIVITIES & TOURS',
     description: 'Explore tours and activities for your trip.',
-    href: 'https://klook.tpk.mx/xQgfSFs9',
+    href: (destination: string) => affiliateSearchUrl('137', '4110', destinationSearchUrl('https://www.klook.com/search/result/', 'query', destination)),
     Icon: Compass,
   },
   {
     name: 'KKday',
     category: 'LOCAL EXPERIENCES',
     description: 'Discover activities and local experiences.',
-    href: 'https://kkday.tpk.mx/sYRiuHtU',
+    href: (destination: string) => affiliateSearchUrl('633', '9074', destinationSearchUrl('https://www.kkday.com/en-us/product/productlist', 'keyword', destination)),
     Icon: Compass,
   },
   {
     name: 'Kiwitaxi',
     category: 'AIRPORT TRANSFERS',
     description: 'Arrange an airport transfer.',
-    href: 'https://kiwitaxi.tpk.mx/nQonwRuO',
+    href: (destination: string) => affiliateSearchUrl('1', '647', destinationSearchUrl('https://kiwitaxi.com/en/search/', 'to', destination)),
     Icon: CarFront,
   },
   {
     name: 'GetTransfer',
     category: 'CITY TRANSFERS',
     description: 'Explore private transfer options.',
-    href: 'https://gettransfer.tpk.mx/n7JQGjnI',
+    href: (destination: string) => affiliateSearchUrl('147', '4439', destinationSearchUrl('https://gettransfer.com/en', 'to', destination)),
     Icon: CarFront,
   },
   {
     name: 'Localrent',
     category: 'CAR RENTAL',
     description: 'Explore car rental options at your destination.',
-    href: 'https://localrent.tpk.mx/NAQS6NwU',
+    href: (destination: string) => affiliateSearchUrl('87', '2043', destinationSearchUrl('https://localrent.com/en', 'location', destination)),
     Icon: CarFront,
   },
   {
     name: 'Airalo',
     category: 'MOBILE DATA',
     description: 'Explore eSIM data plans before you travel.',
-    href: 'https://airalo.tpk.mx/S43lKSoo',
+    href: (destination: string) => affiliateSearchUrl('541', '8310', destinationSearchUrl('https://www.airalo.com/search', 'query', destination)),
     Icon: Wifi,
   },
   {
     name: 'AirHelp',
     category: 'FLIGHT SUPPORT',
     description: 'Find support for delayed or cancelled flights.',
-    href: 'https://airhelp.tpk.mx/crWJPUJD',
+    href: (destination: string) => affiliateSearchUrl('120', '9139', destinationSearchUrl('https://www.airhelp.com/', 'destination', destination)),
     Icon: ShieldCheck,
   },
   {
     name: 'Aviasales',
     category: 'FLIGHTS',
     description: 'Search for flights to your destination.',
-    href: 'https://aviasales.tpk.mx/PG3KT8Gi',
+    href: (destination: string) => affiliateSearchUrl('100', '4114', destinationSearchUrl('https://www.aviasales.com/', 'destination', destination)),
     Icon: Plane,
   },
 ]
 
 function partnerLink(template: string | undefined, fallback: string, query: string) {
-  return template ? template.replaceAll('{query}', encodeURIComponent(query)) : fallback
+  return template?.includes('{query}')
+    ? template.replaceAll('{query}', encodeURIComponent(query.trim()))
+    : fallback
 }
 
 function directionsUrl(origin: string, destination: string) {
@@ -189,8 +214,8 @@ export function TravelPlanner({ user, subscriptionStatus, canManageBilling }: Pl
     destination,
   )
 
-  const flightUrl = 'https://aviasales.tpk.mx/PG3KT8Gi'
-  const klookUrl = 'https://klook.tpk.mx/xQgfSFs9'
+  const flightUrl = affiliateSearchUrl('100', '4114', destinationSearchUrl('https://www.aviasales.com/', 'destination', destination))
+  const klookUrl = affiliateSearchUrl('137', '4110', destinationSearchUrl('https://www.klook.com/search/result/', 'query', destination))
 
   return (
     <div className="premium-workspace" id="top">
@@ -355,7 +380,7 @@ export function TravelPlanner({ user, subscriptionStatus, canManageBilling }: Pl
           </p>
         </section>
 
-        <section className="premium-booking" id="booking"><div className="booking-decoration" aria-hidden="true"><Sparkles size={20} /></div><div className="premium-booking-copy"><span>{t("03 / WHEN YOU'RE READY")}</span><h3>{t('Bring the plan to life.')}</h3><p>{t('Partner links may not prefill this destination. Search for {destination} on the partner site where needed, and confirm current prices directly with providers.', { destination })}</p></div><div className="premium-booking-actions">
+        <section className="premium-booking" id="booking"><div className="booking-decoration" aria-hidden="true"><Sparkles size={20} /></div><div className="premium-booking-copy"><span>{t("03 / WHEN YOU'RE READY")}</span><h3>{t('Bring the plan to life.')}</h3><p>{t('Partner searches are prefilled for {destination}. Transfer and flight providers may also ask for a pickup city, dates, or route details.', { destination })}</p></div><div className="premium-booking-actions">
             <a href={expediaUrl} target="_blank" rel="sponsored noopener noreferrer">
               <Hotel size={17} />
               <span>
@@ -392,7 +417,7 @@ export function TravelPlanner({ user, subscriptionStatus, canManageBilling }: Pl
             <a
               className="travel-extra-link"
               key={name}
-              href={href}
+              href={href(destination)}
               target="_blank"
               rel="sponsored noopener noreferrer"
             >
