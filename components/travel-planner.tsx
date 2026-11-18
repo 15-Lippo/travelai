@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from 'react'
 import { ArrowDown, ArrowRight, CalendarDays, CarFront, Check, ChevronRight, Compass, Heart, Hotel, MapPin, Menu, Plane, ShieldCheck, Sparkles, Utensils, Users, Wallet, Wifi, X } from 'lucide-react'
 import { AccountActions } from '@/components/account-actions'
+import { PWAInstall } from '@/components/pwa-install'
 import { LanguageSwitcher } from '@/components/language-switcher'
 import { SubscriptionGate } from '@/components/subscription-gate'
 import { useLocale } from '@/components/locale-provider'
@@ -233,6 +234,7 @@ export function TravelPlanner({ user, subscriptionStatus, canManageBilling }: Pl
         <div className="workspace-header-actions">
           <span className="workspace-status"><span aria-hidden="true" /> {t('AI TRIP DESIGNER')}</span>
           <LanguageSwitcher />
+          <PWAInstall />
           <AccountActions user={user} canManageBilling={canManageBilling} />
           <button className="workspace-mobile-menu" type="button" onClick={() => setMenuOpen(!menuOpen)} aria-label={menuOpen ? t('Close menu') : t('Open menu')} aria-expanded={menuOpen} aria-controls="primary-nav">
             {menuOpen ? <X size={20} /> : <Menu size={20} />}
