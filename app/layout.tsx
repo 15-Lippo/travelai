@@ -11,9 +11,21 @@ export const metadata: Metadata = {
   title: 'travel AI — Your personal AI travel designer',
   description: 'Create a photo-rich, day-by-day vacation plan with thoughtful local recommendations, restaurants, excursions, and booking links. Pianifica viaggi personalizzati con consigli locali e itinerari giorno per giorno.',
   generator: 'v0.app',
+  manifest: '/manifest.webmanifest',
+  appleWebApp: {
+    capable: true,
+    title: 'travelAI',
+    statusBarStyle: 'default',
+  },
+  icons: {
+    apple: [{ url: '/travelai-pwa-icon.png', sizes: '1024x1024', type: 'image/png' }],
+  },
 }
 
 export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
   colorScheme: 'light',
   themeColor: '#f7f6f2',
 }

@@ -365,9 +365,32 @@ html[dir="rtl"] .premium-field textarea { text-align: right; }
   .workspace-header-actions { gap: 6px; }
   .workspace-account-actions { gap: 5px; }
   .workspace-account-identity { display: none; }
-  .workspace-account-link,.workspace-account-button,.workspace-billing-link { min-height: 30px; padding: 0 8px; font-size: 8px; }
+  .workspace-account-link,.workspace-account-button,.workspace-billing-link { min-height: 38px; padding: 0 8px; font-size: 9px; }
+  .workspace-mobile-menu { min-width: 40px; min-height: 40px; align-items: center; justify-content: center; }
+  .language-switcher select { min-height: 38px; padding-inline: 9px; font-size: 11px; }
+  .workspace-nav a { display: flex; min-height: 44px; align-items: center; font-size: 14px; }
+  .workspace-fields-grid { gap: 12px; }
+  .premium-field > input,.premium-field > select { min-height: 46px; font-size: 16px; }
+  .premium-field textarea { min-height: 88px; font-size: 16px; }
+  .preference-chip { min-height: 40px; padding-inline: 12px; font-size: 11px; }
+  .workspace-submit { min-height: 50px; font-size: 13px; }
+  .pwa-install-button { width: 40px; min-height: 40px; justify-content: center; padding: 0; }
+  .pwa-install-button span { display: none; }
+  .pwa-install-hint { right: -92px; width: min(270px, calc(100vw - 32px)); }
+  .premium-workspace { padding-bottom: env(safe-area-inset-bottom); }
   .subscription-gate { gap: 18px; padding: 18px; }
   .subscription-plan-card { padding: 18px; }
   .subscription-gate-copy h2 { font-size: 29px; }
   .auth-card { padding: 22px; }
+}
+
+.pwa-install-wrap { position: relative; display: inline-flex; align-items: center; }
+.pwa-install-button { display: inline-flex; min-height: 36px; align-items: center; justify-content: center; gap: 6px; padding: 0 11px; border: 1px solid #e3dfd7; border-radius: 999px; background: #fffefa; color: #52616a; font-size: 10px; font-weight: 700; white-space: nowrap; }
+.pwa-install-button:hover { border-color: #bd884c; color: #875b2a; }
+.pwa-install-button:focus-visible { outline: 2px solid #9c641f; outline-offset: 2px; }
+.pwa-install-hint { position: absolute; z-index: 12; top: calc(100% + 10px); right: 0; display: flex; width: 260px; align-items: flex-start; gap: 9px; margin: 0; padding: 13px; border: 1px solid #e8e2d8; border-radius: 12px; background: #fffefa; color: #40515b; box-shadow: 0 12px 32px #172a351c; font-size: 12px; line-height: 1.5; }
+.pwa-install-hint svg { flex: 0 0 auto; color: #a36d31; }
+
+@media (prefers-reduced-motion: reduce) {
+  .premium-workspace, .premium-workspace * { scroll-behavior: auto; }
 }
