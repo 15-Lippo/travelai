@@ -4,6 +4,7 @@ import { useState, type FormEvent } from 'react'
 import { ArrowDown, ArrowRight, CalendarDays, CarFront, Check, ChevronRight, Compass, Heart, Hotel, MapPin, Menu, Plane, ShieldCheck, Sparkles, Utensils, Users, Wallet, Wifi, X } from 'lucide-react'
 import { AccountActions } from '@/components/account-actions'
 import { PWAInstall } from '@/components/pwa-install'
+import { NearbyRecommendations } from '@/components/nearby-recommendations'
 import { LanguageSwitcher } from '@/components/language-switcher'
 import { SubscriptionGate } from '@/components/subscription-gate'
 import { useLocale } from '@/components/locale-provider'
@@ -230,6 +231,7 @@ export function TravelPlanner({ user, subscriptionStatus, canManageBilling }: Pl
           <a href="#your-trip">{t('Itinerary')}</a>
           <a href="#booking">{t('Booking hub')}</a>
           <a href="#travel-essentials">{t('Travel extras')}</a>
+          <a href="#nearby">{t('Near me')}</a>
         </nav>
         <div className="workspace-header-actions">
           <span className="workspace-status"><span aria-hidden="true" /> {t('AI TRIP DESIGNER')}</span>
@@ -260,6 +262,8 @@ export function TravelPlanner({ user, subscriptionStatus, canManageBilling }: Pl
           </div>
         </div>
       </section>
+
+      <NearbyRecommendations />
 
       <main className="workspace-main" id="planner">
         {hasActiveSubscription ? (
