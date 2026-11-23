@@ -13,7 +13,6 @@ export default async function Page() {
   return (
     <TravelPlanner
       user={user ? { name: user.name, email: user.email } : null}
-      subscriptionStatus={access.status}
       canManageBilling={access.canManageBilling}
     />
   )

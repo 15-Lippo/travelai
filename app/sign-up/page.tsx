@@ -7,7 +7,7 @@ import { getSafeRedirectPath } from '@/lib/safe-redirect'
 
 export const metadata: Metadata = {
   title: 'Create account | travel AI',
-  description: 'Create an account to unlock personalized AI trip planning.',
+  description: 'Create a free account and plan your next trip. No subscription required.',
 }
 
 type SignUpPageProps = {

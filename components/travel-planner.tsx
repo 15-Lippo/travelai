@@ -6,7 +6,7 @@ import { AccountActions } from '@/components/account-actions'
 import { PWAInstall } from '@/components/pwa-install'
 import { NearbyRecommendations } from '@/components/nearby-recommendations'
 import { LanguageSwitcher } from '@/components/language-switcher'
-import { SubscriptionGate } from '@/components/subscription-gate'
+import { AccountGate } from '@/components/account-gate'
 import { useLocale } from '@/components/locale-provider'
 
 type Photo = { url: string; attribution: string; sourceUrl: string } | null
@@ -139,13 +139,12 @@ function directionsUrl(origin: string, destination: string) {
 type PlannerUser = { name: string; email: string }
 type PlannerProps = {
   user: PlannerUser | null
-  subscriptionStatus: 'active' | 'inactive' | 'unavailable'
   canManageBilling: boolean
 }
 
-export function TravelPlanner({ user, subscriptionStatus, canManageBilling }: PlannerProps) {
+export function TravelPlanner({ user, canManageBilling }: PlannerProps) {
   const { locale, t } = useLocale()
-  const hasActiveSubscription = subscriptionStatus === 'active'
+  const hasAccount = Boolean(user)
   const [destination, setDestination] = useState('')
   const [duration, setDuration] = useState('5')
   const [travelers, setTravelers] = useState('2')
@@ -266,7 +265,7 @@ export function TravelPlanner({ user, subscriptionStatus, canManageBilling }: Pl
       <NearbyRecommendations />
 
       <main className="workspace-main" id="planner">
-        {hasActiveSubscription ? (
+        {hasAccount ? (
           <>
         <div className="workspace-section-title">
           <div><span className="section-step">{t('01 / THE BRIEF')}</span><h2>{t('Tell us what feels like')} <em>{t('your kind of trip.')}</em></h2><p>{t('A few details help your AI travel designer find the right rhythm.')}</p></div>
@@ -299,11 +298,11 @@ export function TravelPlanner({ user, subscriptionStatus, canManageBilling }: Pl
         </form>
           </>
         ) : (
-          <SubscriptionGate user={user} status={subscriptionStatus} canManageBilling={canManageBilling} />
+          <AccountGate />
         )}
       </main>
 
-      {hasActiveSubscription && plan && <section className="workspace-results" id="your-trip" aria-label={t('Your itinerary')}>
+      {hasAccount && plan && <section className="workspace-results" id="your-trip" aria-label={t('Your itinerary')}>
         <div className="results-topline"><div><span className="section-step">{t('02 / YOUR ITINERARY')}</span><span className="live-badge"><span aria-hidden="true" /> {t('PERSONALIZED PLAN')}</span></div><button className="edit-brief" type="button" onClick={() => document.getElementById('planner')?.scrollIntoView({ behavior: 'smooth' })}>{t('Edit trip brief')} <ArrowDown size={14} /></button></div>
         <div className="results-overview"><div className="results-overview-text"><p className="results-location"><MapPin size={14} />{destination}<span /> {duration} {t('DAYS')} <span /> {travelers} {t('TRAVELERS')}</p><h2>{plan.headline}</h2><p className="results-description">{plan.overview}</p><div className="fit-note"><span><Heart size={17} /></span><div><strong>{t('Why this trip fits')}</strong><p>{plan.destinationFit}</p></div></div><p className="season-note"><CalendarDays size={15} />{plan.bestTimeNote}</p></div><div className="overview-photo"><img src={plan.days[0]?.photo?.url || '/travel-hero.png'} alt={`${destination} travel inspiration`} onError={() => clearDayPhoto(0)} /><span>{t('YOUR DESTINATION')}</span><small>{t('Photo via Wikimedia Commons')}</small></div></div>
 
@@ -442,7 +441,7 @@ export function TravelPlanner({ user, subscriptionStatus, canManageBilling }: Pl
         <p className="travel-extras-note">{t('Partner links may be affiliate links. Check provider coverage, eligibility, prices and terms before purchase.')}</p>
       </section>
 
-      {(!hasActiveSubscription || !plan) && (
+      {(!hasAccount || !plan) && (
         <section className="workspace-value-row"><article><span>01</span><div><strong>{t('Your pace, not a template')}</strong><p>{t('Build days around how you like to travel.')}</p></div></article><article><span>02</span><div><strong>{t('Places worth remembering')}</strong><p>{t('See the places and the story behind them.')}</p></div></article><article><span>03</span><div><strong>{t('Plan, then book with confidence')}</strong><p>{t('Keep recommendations and booking links together.')}</p></div></article></section>
       )}
       <footer className="workspace-footer"><div className="footer-brand"><span className="brand-mark"><Plane size={16} /></span><span>travel AI</span></div><p>{t('Less searching. More somewhere wonderful.')}</p><span>© 2026 travel AI</span></footer>
