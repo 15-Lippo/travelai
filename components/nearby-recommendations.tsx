@@ -73,7 +73,7 @@ export function NearbyRecommendations() {
       }
     }, (locationError: GeolocationError) => {
       setError(locationError.code === 1
-        ? t('Allow location access to see nearby recommendations.')
+        ? t('Location is blocked. In your browser site settings, allow Location for this site, then reload and try again.')
         : t('Location unavailable. Check your device settings and try again.'))
       setStatus('idle')
     }, { enableHighAccuracy: false, maximumAge: 120000, timeout: 12000 })
