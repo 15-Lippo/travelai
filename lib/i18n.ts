@@ -37,7 +37,7 @@ const italianMessages: Record<string, string> = {
   'No places in this category were found nearby.': 'Non abbiamo trovato luoghi di questa categoria nelle vicinanze.',
   'Place data from OpenStreetMap contributors. Check current opening hours before you go.': 'Dati cartografici di OpenStreetMap. Verifica gli orari aggiornati prima di partire.',
   'Location access is unavailable in this browser.': 'La geolocalizzazione non è disponibile in questo browser.',
-  'Allow location access to see nearby recommendations.': 'Consenti l’accesso alla posizione per vedere i consigli nelle vicinanze.',
+  'Location is blocked. In your browser site settings, allow Location for this site, then reload and try again.': 'La posizione è bloccata. Nelle impostazioni del sito in Chrome, imposta Posizione su Consenti, ricarica la pagina e riprova.',
   'Location unavailable. Check your device settings and try again.': 'Posizione non disponibile. Controlla le impostazioni del dispositivo e riprova.',
   'We could not find nearby places right now. Please try again.': 'Non riusciamo a trovare luoghi vicini in questo momento. Riprova.',
   restaurant: 'Ristorante',
