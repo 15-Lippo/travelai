@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { requireSignedInUser } from '@/lib/app-access'
+import { requirePaidUser } from '@/lib/app-access'
 
 export const runtime = 'nodejs'
 
@@ -18,7 +18,7 @@ const guideSchema = {
 } as const
 
 export async function POST(request: Request) {
-  const access = await requireSignedInUser(request)
+  const access = await requirePaidUser(request)
   if (!access.ok) return access.response
 
   if (!process.env.OPENAI_API_KEY) return NextResponse.json({ error: 'Detailed guides are not configured yet. Please try again later.' }, { status: 503 })

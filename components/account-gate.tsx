@@ -18,13 +18,13 @@ export function AccountGate() {
           <li><Check aria-hidden="true" /> {t('Restaurant, excursion, and stay recommendations')}</li>
           <li><Check aria-hidden="true" /> {t('A practical booking hub for every itinerary')}</li>
         </ul>
-        <p className="account-free-note"><Sparkles aria-hidden="true" /> {t('No subscription required.')}</p>
+        <p className="account-free-note"><Sparkles aria-hidden="true" /> {t('No card needed to create an account.')}</p>
       </div>
 
       <div className="account-card">
-        <span className="account-card-label"><Sparkles aria-hidden="true" /> {t('FREE ACCOUNT')}</span>
-        <h3>{t('Create a free account')}</h3>
-        <p>{t('Create a free account—no subscription or payment required.')}</p>
+        <span className="account-card-label"><Sparkles aria-hidden="true" /> {t('ANNUAL MEMBERSHIP')}</span>
+        <h3>€9.90{t(' / year')}</h3>
+        <p>{t('Three months free, then €9.90 per year. The subscription renews annually unless cancelled.')}</p>
         <div className="account-links">
           <Link className="account-primary-button" href="/sign-up">{t('Create your account')}</Link>
           <Link className="account-secondary-link" href="/sign-in">{t('I already have an account')}</Link>

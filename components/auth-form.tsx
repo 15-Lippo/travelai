@@ -65,7 +65,7 @@ export function AuthForm({
         <h1 id="auth-title">{isSignUp ? t('Make room for somewhere wonderful.') : t('Welcome back.')}</h1>
         <p className="auth-description">
           {isSignUp
-            ? t('Create a free account—no subscription or payment required.')
+            ? t('Create an account, then choose your annual membership.')
             : t('Sign in to continue planning a trip that feels like yours.')}
         </p>
 

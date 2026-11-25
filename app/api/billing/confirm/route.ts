@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
-import { db } from '@/lib/db'
-import { subscriptions } from '@/lib/db/schema'
+import { STRIPE_PAYMENT_LINK_ID } from '@/lib/billing-config'
+import { recordStripeSubscription } from '@/lib/subscriptions'
 import { stripe } from '@/lib/stripe'
 
 export const runtime = 'nodejs'
@@ -27,11 +27,16 @@ export async function GET(request: Request) {
 
   try {
     const checkoutSession = await stripe.checkout.sessions.retrieve(sessionId)
+    const paymentLinkId =
+      typeof checkoutSession.payment_link === 'string'
+        ? checkoutSession.payment_link
+        : checkoutSession.payment_link?.id
+
     if (
       checkoutSession.mode !== 'subscription' ||
       checkoutSession.status !== 'complete' ||
       checkoutSession.client_reference_id !== authSession.user.id ||
-      checkoutSession.metadata?.userId !== authSession.user.id
+      paymentLinkId !== STRIPE_PAYMENT_LINK_ID
     ) {
       return billingRedirect(request, 'unverified')
     }
@@ -47,34 +52,12 @@ export async function GET(request: Request) {
 
     if (!stripeSubscriptionId || !stripeCustomerId) return billingRedirect(request, 'unverified')
 
-    const subscription = await stripe.subscriptions.retrieve(stripeSubscriptionId)
-    const subscriptionCustomerId =
-      typeof subscription.customer === 'string' ? subscription.customer : subscription.customer.id
-
-    if (
-      subscriptionCustomerId !== stripeCustomerId ||
-      (subscription.status !== 'active' && subscription.status !== 'trialing')
-    ) {
-      return billingRedirect(request, 'pending')
-    }
-
-    await db
-      .insert(subscriptions)
-      .values({
-        userId: authSession.user.id,
-        stripeCustomerId,
-        stripeSubscriptionId,
-        status: subscription.status,
-      })
-      .onConflictDoUpdate({
-        target: subscriptions.userId,
-        set: {
-          stripeCustomerId,
-          stripeSubscriptionId,
-          status: subscription.status,
-          updatedAt: new Date(),
-        },
-      })
+    const confirmed = await recordStripeSubscription(
+      authSession.user.id,
+      stripeCustomerId,
+      stripeSubscriptionId,
+    )
+    if (!confirmed) return billingRedirect(request, 'pending')
 
     return NextResponse.redirect(new URL('/billing/complete', request.url))
   } catch (error) {

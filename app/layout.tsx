@@ -8,8 +8,8 @@ import './globals.css'
 import './premium-workspace.css'
 
 export const metadata: Metadata = {
-  title: 'travel AI — Your personal AI travel designer',
-  description: 'Create a photo-rich, day-by-day vacation plan with thoughtful local recommendations, restaurants, excursions, and booking links. Pianifica viaggi personalizzati con consigli locali e itinerari giorno per giorno.',
+  title: 'travel AI — Annual travel membership',
+  description: 'Create personalized day-by-day travel plans with travelAI. Annual membership includes a three-month free trial, then €9.90/year. Pianifica viaggi su misura con un abbonamento annuale a travelAI.',
   generator: 'v0.app',
   manifest: '/manifest.webmanifest',
   appleWebApp: {
