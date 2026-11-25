@@ -316,6 +316,81 @@ const accountMessages: Partial<Record<Locale, Record<string, string>>> = {
   ar: { 'A MORE THOUGHTFUL WAY TO TRAVEL': 'طريقة أكثر عناية للسفر', 'Your next trip deserves a plan that feels like you.': 'رحلتك القادمة تستحق خطة تناسبك.', 'Unlock personalized, day-by-day itineraries made around your pace, interests, and budget.': 'خطط يومية مخصصة تناسب إيقاعك واهتماماتك وميزانيتك.', 'Bespoke day-by-day itineraries shaped around your travel style': 'خطط يومية تناسب أسلوب سفرك', 'Restaurant, excursion, and stay recommendations': 'توصيات للمطاعم والرحلات والإقامة', 'A practical booking hub for every itinerary': 'مركز عملي لحجوزات كل رحلة', 'Secure checkout powered by Stripe': 'دفع آمن عبر Stripe', 'ANNUAL MEMBERSHIP': 'عضوية سنوية', ' / year': ' / سنة', 'Create your account': 'أنشئ حسابك', 'I already have an account': 'لدي حساب بالفعل', 'Manage existing billing': 'إدارة الاشتراك', '04 / TRAVEL EXTRAS': '04 / خدمات السفر', 'The little details, taken care of.': 'نهتم بالتفاصيل الصغيرة أيضًا.', 'Useful options for before and during your trip.': 'خيارات مفيدة قبل الرحلة وأثناءها.', 'ACTIVITIES & TOURS': 'الأنشطة والجولات', 'LOCAL EXPERIENCES': 'تجارب محلية', 'AIRPORT TRANSFERS': 'التوصيل من وإلى المطار', 'CITY TRANSFERS': 'التنقل داخل المدينة', 'CAR RENTAL': 'تأجير السيارات', 'MOBILE DATA': 'بيانات الهاتف', 'FLIGHT SUPPORT': 'مساعدة الرحلات', 'FLIGHTS': 'الرحلات الجوية' },
 }
 
+const membershipMessages: Partial<Record<Locale, Record<string, string>>> = {
+  it: {
+    'START YOUR MEMBERSHIP': 'INIZIA IL TUO ABBONAMENTO',
+    'No card needed to create an account.': 'Per creare un account non serve una carta.',
+    'Create an account, then choose your annual membership.': 'Crea un account, poi scegli l’abbonamento annuale.',
+    'Three months free, then €9.90 per year. The subscription renews annually unless cancelled.': 'Tre mesi gratis, poi 9,90 € all’anno. L’abbonamento si rinnova ogni anno salvo disdetta.',
+    'Start your 3-month free trial': 'Inizia la prova gratuita di 3 mesi',
+    'We could not verify your plan right now. Please try again shortly.': 'Non è stato possibile verificare il tuo abbonamento. Riprova tra poco.',
+    'Live Stripe checkout is not configured yet.': 'Il pagamento Stripe live non è ancora configurato.',
+  },
+  es: {
+    'START YOUR MEMBERSHIP': 'EMPIEZA TU SUSCRIPCIÓN',
+    'No card needed to create an account.': 'No necesitas tarjeta para crear una cuenta.',
+    'Create an account, then choose your annual membership.': 'Crea una cuenta y elige tu suscripción anual.',
+    'Three months free, then €9.90 per year. The subscription renews annually unless cancelled.': 'Tres meses gratis y después 9,90 € al año. La suscripción se renueva anualmente salvo que la canceles.',
+    'Start your 3-month free trial': 'Empieza tu prueba gratuita de 3 meses',
+    'We could not verify your plan right now. Please try again shortly.': 'No hemos podido verificar tu suscripción. Inténtalo de nuevo en breve.',
+    'Live Stripe checkout is not configured yet.': 'El pago con Stripe en modo real aún no está configurado.',
+  },
+  fr: {
+    'START YOUR MEMBERSHIP': 'DÉCOUVRIR L’ABONNEMENT',
+    'No card needed to create an account.': 'Aucune carte n’est nécessaire pour créer un compte.',
+    'Create an account, then choose your annual membership.': 'Créez un compte, puis choisissez votre abonnement annuel.',
+    'Three months free, then €9.90 per year. The subscription renews annually unless cancelled.': 'Trois mois offerts, puis 9,90 € par an. L’abonnement est renouvelé chaque année sauf résiliation.',
+    'Start your 3-month free trial': 'Commencer l’essai gratuit de 3 mois',
+    'We could not verify your plan right now. Please try again shortly.': 'Impossible de vérifier votre abonnement pour le moment. Réessayez bientôt.',
+    'Live Stripe checkout is not configured yet.': 'Le paiement Stripe en mode réel n’est pas encore configuré.',
+  },
+  de: {
+    'START YOUR MEMBERSHIP': 'MITGLIEDSCHAFT STARTEN',
+    'No card needed to create an account.': 'Für ein Konto ist keine Karte erforderlich.',
+    'Create an account, then choose your annual membership.': 'Erstelle ein Konto und wähle anschließend deine Jahresmitgliedschaft.',
+    'Three months free, then €9.90 per year. The subscription renews annually unless cancelled.': 'Drei Monate kostenlos, danach 9,90 € pro Jahr. Das Abo verlängert sich jährlich, sofern es nicht gekündigt wird.',
+    'Start your 3-month free trial': '3-monatigen Gratiszeitraum starten',
+    'We could not verify your plan right now. Please try again shortly.': 'Dein Abo konnte gerade nicht überprüft werden. Bitte versuche es gleich noch einmal.',
+    'Live Stripe checkout is not configured yet.': 'Stripe-Zahlungen im Live-Modus sind noch nicht eingerichtet.',
+  },
+  pt: {
+    'START YOUR MEMBERSHIP': 'COMECE SUA ASSINATURA',
+    'No card needed to create an account.': 'Não é necessário cartão para criar uma conta.',
+    'Create an account, then choose your annual membership.': 'Crie uma conta e escolha sua assinatura anual.',
+    'Three months free, then €9.90 per year. The subscription renews annually unless cancelled.': 'Três meses grátis e depois € 9,90 por ano. A assinatura é renovada anualmente, a menos que seja cancelada.',
+    'Start your 3-month free trial': 'Comece seu teste grátis de 3 meses',
+    'We could not verify your plan right now. Please try again shortly.': 'Não foi possível verificar sua assinatura agora. Tente novamente em breve.',
+    'Live Stripe checkout is not configured yet.': 'O pagamento Stripe em modo real ainda não está configurado.',
+  },
+  zh: {
+    'START YOUR MEMBERSHIP': '开通会员',
+    'No card needed to create an account.': '创建账户无需银行卡。',
+    'Create an account, then choose your annual membership.': '创建账户后，选择年度会员方案。',
+    'Three months free, then €9.90 per year. The subscription renews annually unless cancelled.': '前三个月免费，之后每年 €9.90。订阅将按年自动续订，除非取消。',
+    'Start your 3-month free trial': '开始 3 个月免费试用',
+    'We could not verify your plan right now. Please try again shortly.': '暂时无法验证你的订阅，请稍后重试。',
+    'Live Stripe checkout is not configured yet.': 'Stripe 实时支付尚未配置。',
+  },
+  ja: {
+    'START YOUR MEMBERSHIP': 'メンバーシップを始める',
+    'No card needed to create an account.': 'アカウント作成にカードは不要です。',
+    'Create an account, then choose your annual membership.': 'アカウントを作成し、年間メンバーシップを選択してください。',
+    'Three months free, then €9.90 per year. The subscription renews annually unless cancelled.': '最初の3か月は無料、その後は年額€9.90です。解約しない限り、毎年自動更新されます。',
+    'Start your 3-month free trial': '3か月間の無料トライアルを始める',
+    'We could not verify your plan right now. Please try again shortly.': '現在サブスクリプションを確認できません。しばらくしてから再度お試しください。',
+    'Live Stripe checkout is not configured yet.': 'Stripeの本番決済はまだ設定されていません。',
+  },
+  ar: {
+    'START YOUR MEMBERSHIP': 'ابدأ عضويتك',
+    'No card needed to create an account.': 'لا تحتاج إلى بطاقة لإنشاء حساب.',
+    'Create an account, then choose your annual membership.': 'أنشئ حسابًا ثم اختر عضويتك السنوية.',
+    'Three months free, then €9.90 per year. The subscription renews annually unless cancelled.': 'ثلاثة أشهر مجانًا، ثم 9.90 يورو سنويًا. يتجدد الاشتراك سنويًا ما لم يتم إلغاؤه.',
+    'Start your 3-month free trial': 'ابدأ الفترة التجريبية المجانية لمدة 3 أشهر',
+    'We could not verify your plan right now. Please try again shortly.': 'تعذر التحقق من اشتراكك الآن. يرجى المحاولة بعد قليل.',
+    'Live Stripe checkout is not configured yet.': 'لم يتم إعداد الدفع المباشر عبر Stripe بعد.',
+  },
+}
+
 const serviceMessages: Partial<Record<Locale, Record<string, string>>> = {
   es: { 'Two months free from registration. No card is needed to start the trial. Add a payment method before it ends to continue at {price} per year; otherwise, the subscription ends.': 'Disfruta de dos meses gratis desde el registro. No necesitas tarjeta para iniciar la prueba. Añade un método de pago antes de que termine para continuar por {price} al año; de lo contrario, la suscripción finalizará.', "Your trip preferences are sent to Google's Gemini service to generate your itinerary. Payment details are handled by Stripe.": 'Tus preferencias se envían a Gemini de Google para crear el itinerario. Stripe gestiona los datos de pago.', 'Explore tours and activities for your trip.': 'Explora tours y actividades para tu viaje.', 'Discover activities and local experiences.': 'Descubre actividades y experiencias locales.', 'Arrange an airport transfer.': 'Organiza un traslado al aeropuerto.', 'Explore private transfer options.': 'Descubre opciones de traslado privado.', 'Explore car rental options at your destination.': 'Descubre opciones de alquiler de coches en tu destino.', 'Explore eSIM data plans before you travel.': 'Consulta planes de datos eSIM antes de viajar.', 'Find support for delayed or cancelled flights.': 'Encuentra ayuda para vuelos retrasados o cancelados.', 'Search for flights to your destination.': 'Busca vuelos a tu destino.', 'Some booking links may be affiliate links. Prices, availability and booking terms are controlled by providers.': 'Algunos enlaces de reserva pueden ser de afiliados. Los proveedores determinan precios, disponibilidad y condiciones.' },
   fr: { 'Two months free from registration. No card is needed to start the trial. Add a payment method before it ends to continue at {price} per year; otherwise, the subscription ends.': 'Deux mois offerts dès l’inscription, sans carte bancaire pour commencer. Ajoutez un moyen de paiement avant la fin de l’essai pour continuer à {price} par an ; sinon, l’abonnement prendra fin.', "Your trip preferences are sent to Google's Gemini service to generate your itinerary. Payment details are handled by Stripe.": 'Vos préférences de voyage sont transmises à Gemini de Google pour créer votre itinéraire. Stripe traite les paiements.', 'Explore tours and activities for your trip.': 'Découvrez des visites et activités pour votre voyage.', 'Discover activities and local experiences.': 'Découvrez des activités et expériences locales.', 'Arrange an airport transfer.': 'Organisez un transfert aéroport.', 'Explore private transfer options.': 'Découvrez des options de transfert privé.', 'Explore car rental options at your destination.': 'Découvrez les options de location de voiture à destination.', 'Explore eSIM data plans before you travel.': 'Découvrez les forfaits eSIM avant de partir.', 'Find support for delayed or cancelled flights.': 'Obtenez de l’aide en cas de vol retardé ou annulé.', 'Search for flights to your destination.': 'Recherchez des vols vers votre destination.', 'Some booking links may be affiliate links. Prices, availability and booking terms are controlled by providers.': 'Certains liens de réservation peuvent être affiliés. Les fournisseurs fixent les prix, disponibilités et conditions.' },
@@ -332,9 +407,9 @@ export function resolveLocale(value?: string | null): Locale {
 }
 
 export function translate(locale: Locale, message: string, values: TranslationValues = {}) {
-  const template = locale === 'it'
+  const template = membershipMessages[locale]?.[message] ?? (locale === 'it'
     ? italianMessages[message] ?? message
-    : serviceMessages[locale]?.[message] ?? accountMessages[locale]?.[message] ?? plannerMessages[locale]?.[message] ?? coreMessages[locale]?.[message] ?? message
+    : serviceMessages[locale]?.[message] ?? accountMessages[locale]?.[message] ?? plannerMessages[locale]?.[message] ?? coreMessages[locale]?.[message] ?? message)
 
   return Object.entries(values).reduce(
     (translated, [key, value]) => translated.replaceAll(`{${key}}`, String(value)),

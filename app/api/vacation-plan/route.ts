@@ -2,7 +2,7 @@ import { createGoogle } from '@ai-sdk/google'
 import { generateText, Output } from 'ai'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
-import { requireSignedInUser } from '@/lib/app-access'
+import { requirePaidUser } from '@/lib/app-access'
 import { resolveLocale, translate, type Locale } from '@/lib/i18n'
 
 export const runtime = 'nodejs'
@@ -122,7 +122,7 @@ async function findWikimediaPhoto(query: string) {
 }
 
 export async function POST(request: Request) {
-  const access = await requireSignedInUser(request)
+  const access = await requirePaidUser(request)
   if (!access.ok) return access.response
 
   let input: Record<string, unknown>
